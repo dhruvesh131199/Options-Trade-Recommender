@@ -22,10 +22,16 @@ public class OptionsService {
 
         List<RecommendationResult> recommendations = new ArrayList<>();
 
+        // for (Option option: options){
+        //     recommendations.add(
+        //         new RecommendationResult(option, "test"));
+        // }
+        // return recommendations;
+
         for(Option option: options){
             if (matchesRisk(option, request.getRiskLevel()) && matchesStrategy(option, request.getStrategy())){
                 recommendations.add(
-                    new RecommendationResult(option, "Matches risk level: "+request.getRiskLevel())
+                    new RecommendationResult(option, "Matches risk level: "+request.getRiskLevel()+" and strategy: "+request.getStrategy())
                 );
             }
         }
@@ -50,8 +56,8 @@ public class OptionsService {
     public boolean matchesStrategy(Option option, String strategy){
 
         switch(strategy.toLowerCase()){
-            case "covered call": return option.getOptionType() == "CE";
-            case "protective put": return option.getOptionType() == "PE";
+            case "covered call": return option.getOptionType().equals("CE");
+            case "protective put": return option.getOptionType().equals("PE");
             default: return true;
         }
     }
