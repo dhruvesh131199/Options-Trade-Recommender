@@ -39,3 +39,26 @@ __pycache__/
 
 ##Target cache files
 /target
+
+# Node modules (dependencies)
+node_modules/
+
+# Build output (generated files)
+dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Vite cache
+.vite/
