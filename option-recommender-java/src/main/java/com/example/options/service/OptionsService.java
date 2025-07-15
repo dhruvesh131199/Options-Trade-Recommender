@@ -4,6 +4,8 @@ import com.example.options.client.MarketDataClient;
 import com.example.options.model.Option;
 import com.example.options.model.RecommendationRequest;
 import com.example.options.model.RecommendationResult;
+import com.example.options.model.ExpiryStrikeRequest;
+import com.example.options.model.ExpiryStrikeResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +18,10 @@ public class OptionsService {
     
     @Autowired
     private MarketDataClient marketDataClient;
+
+    public ExpiryStrikeResponse getExpriyStrike(ExpiryStrikeRequest request){
+        return marketDataClient.getExpiryStrike(request.getTicker(), request.getStrategy());
+    }
 
     public List<RecommendationResult> getRecommendations(RecommendationRequest request){
         List<Option> options = marketDataClient.getOptionsForTicker(request.getTicker());

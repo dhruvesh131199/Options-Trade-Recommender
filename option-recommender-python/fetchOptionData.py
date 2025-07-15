@@ -23,7 +23,7 @@ def get_options(ticker: str):
         #We only return options with expiries less than 14 days
         expiries= [datetime.strptime(d, "%Y-%m-%d") for d in expiries]
         today = datetime.today()
-        filtered_expiries = [d.strftime("%Y-%m-%d") for d in expiries if (abs(d - today).days) <= 14]
+        filtered_expiries = [d.strftime("%Y-%m-%d") for d in expiries if ((abs(d - today).days) <= 14 and (abs(d - today).days) >= 7)]
 
         all_options = pd.DataFrame()
 
@@ -52,6 +52,38 @@ def get_options(ticker: str):
         all_options.columns = ["ticker", "optionType", "strikePrice", "expiryDate", "DTE", "premium", "roi"]
 
         return all_options.to_dict(orient='records')
+    
+    except Exception as e:
+        return {"error": str(e)}
+    
+
+@app.get("/options/{ticker}/{strategy}")
+def get_expiries_and_strikes(ticker: str, strategy: str):
+    try:
+        stock = yf.Ticker(ticker)
+        expiries = stock.options
+        
+        #We only return options with expiries less than 14 days
+        expiries= [datetime.strptime(d, "%Y-%m-%d") for d in expiries]
+        today = datetime.today()
+        expiries = [d.strftime("%Y-%m-%d") for d in expiries]
+        expiries = expiries[:4]
+
+        all_strikes = set()
+
+        for expiry in expiries:
+            option_chain = stock.option_chain(expiry)
+            ##handle calls
+            if strategy.lower() == "covered call":
+                all_strikes.update(option_chain.calls[option_chain.calls["inTheMoney"] == False]['strike'].tolist())
+            
+            if strategy.lower() == "protective put":
+                all_strikes.update(option_chain.puts[option_chain.puts["inTheMoney"] == False]['strike'].tolist())
+
+        return {
+            "expiries": expiries,
+            "strikes": sorted(all_strikes)
+        }
     
     except Exception as e:
         return {"error": str(e)}

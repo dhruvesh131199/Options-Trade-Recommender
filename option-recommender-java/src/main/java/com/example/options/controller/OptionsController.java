@@ -2,6 +2,7 @@ package com.example.options.controller;
 
 import com.example.options.service.*;
 import com.example.options.model.*;
+import com.example.options.client.MarketDataClient;
 
 import java.util.List;
 
@@ -18,9 +19,22 @@ public class OptionsController {
     @Autowired
     private OptionsService optionsService;
 
+    @Autowired
+    private MarketDataClient mdc;
+
     @PostMapping("/recommend")
     public List<RecommendationResult> recommend(@RequestBody RecommendationRequest request) {       
         return optionsService.getRecommendations(request);
+    }
+
+    @PostMapping("/expiries_and_strikes")
+    public ExpiryStrikeResponse recommend(@RequestBody ExpiryStrikeRequest request) {       
+        return optionsService.getExpriyStrike(request);
+    }
+
+    @GetMapping("/testfetch")
+    public void testfetch() {       
+        mdc.testfetch("GOOG", "covered call");
     }
     
 
