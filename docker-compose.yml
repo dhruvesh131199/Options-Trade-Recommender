@@ -4,7 +4,7 @@ services:
   # --- Python FastAPI Backend Service ---
   python-api:
     build:
-      context: ./option-recommender-python
+      context: ./option-recommender-frontend/options-ui
       dockerfile: Dockerfile # Refers to project/python/Dockerfile
     ports:
       - "8000:8000" # Map host port 8000 to container port 8000 (FastAPI's internal port)
@@ -47,14 +47,14 @@ services:
   # --- React/Vite Frontend Service ---
   frontend:
     build:
-      context: ./option-recommender-frontend
+      context: ./option-recommender-frontend/options-ui
       # For development, you'd usually use the Vite dev server directly.
       # This requires a Dockerfile configured for Node.js development.
       dockerfile: Dockerfile.dev
     ports:
       - "5173:5173" # Vite's default dev server port
     volumes:
-      - ./option-recommender-frontend:/app           # Mount local source code for live reload
+      - ./option-recommender-frontend/options-ui/:/app           # Mount local source code for live reload
       - /app/node_modules         # Crucial: Prevent host node_modules from overwriting container's
     # Command to start the Vite development server
     command: npm run dev -- --host 0.0.0.0 # --host 0.0.0.0 allows access from outside container

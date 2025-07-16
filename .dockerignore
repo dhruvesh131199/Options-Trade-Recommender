@@ -24,12 +24,12 @@ option-recommender-java/.mvn/             # Maven wrapper files (though usually 
 option-recommender-java/.settings/        # Eclipse specific files
 
 # Frontend specific ignores
-option-recommender-frontend/node_modules/ # These are handled by npm install inside Docker
-option-recommender-frontend/dist/         # Build output for Nginx, copied by Dockerfile
-option-recommender-frontend/build/        # Create-React-App build output
-option-recommender-frontend/.env.local    # Local environment variables
-option-recommender-frontend/.vite/        # Vite cache
-option-recommender-frontend/temp/
+option-recommender-frontend/option-ui/node_modules/ # These are handled by npm install inside Docker
+option-recommender-frontend/option-ui/dist/         # Build output for Nginx, copied by Dockerfile
+option-recommender-frontend/option-ui/build/        # Create-React-App build output
+option-recommender-frontend/option-ui/.env.local    # Local environment variables
+option-recommender-frontend/option-ui/.vite/        # Vite cache
+option-recommender-frontend/option-ui/temp/
 
 # Ignore Docker related files from being copied into services
 Dockerfile
