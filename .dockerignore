@@ -1,0 +1,37 @@
+# Ignore common version control and editor files
+.git
+.gitignore
+.DS_Store
+.vscode/
+
+# Python specific ignores
+option-recommender-python/.venv/
+option-recommender-python/__pycache__/
+option-recommender-python/*.pyc
+option-recommender-python/.pytest_cache/
+option-recommender-python/.mypy_cache/
+# Ignore Python's own build artifacts if any are created outside Docker
+option-recommender-python/build/
+option-recommender-python/dist/
+
+# Java specific ignores
+option-recommender-java/target/           # Build output from Maven/Gradle
+option-recommender-java/.gradle/          # Gradle specific build cache
+option-recommender-java/build/            # Gradle build output
+option-recommender-java/.idea/            # IntelliJ IDE files
+option-recommender-java/*.iml             # IntelliJ module files
+option-recommender-java/.mvn/             # Maven wrapper files (though usually small)
+option-recommender-java/.settings/        # Eclipse specific files
+
+# Frontend specific ignores
+option-recommender-frontend/node_modules/ # These are handled by npm install inside Docker
+option-recommender-frontend/dist/         # Build output for Nginx, copied by Dockerfile
+option-recommender-frontend/build/        # Create-React-App build output
+option-recommender-frontend/.env.local    # Local environment variables
+option-recommender-frontend/.vite/        # Vite cache
+option-recommender-frontend/temp/
+
+# Ignore Docker related files from being copied into services
+Dockerfile
+docker-compose.yml
+.dockerignore

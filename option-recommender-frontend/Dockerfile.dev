@@ -1,0 +1,20 @@
+# frontend/Dockerfile.dev
+FROM node:18-alpine # Alpine for a smaller image
+
+WORKDIR /app
+
+# Copy package.json and lock file first for caching
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy all source code (after dependencies are installed)
+COPY . .
+
+# Expose the Vite development server port
+EXPOSE 5173
+
+# Default command to start the Vite dev server
+# This will be overridden by the docker-compose.yml 'command' for dev-specific settings
+CMD ["npm", "run", "dev""--", "--host", "0.0.0.0"]

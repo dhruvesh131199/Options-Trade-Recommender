@@ -1,0 +1,68 @@
+version: '3.8' # Use a recent version for better features
+
+services:
+  # --- Python FastAPI Backend Service ---
+  python-api:
+    build:
+      context: ./option-recommender-python
+      dockerfile: Dockerfile # Refers to project/python/Dockerfile
+    ports:
+      - "8000:8000" # Map host port 8000 to container port 8000 (FastAPI's internal port)
+    volumes:
+      # Mount the entire Python source directory into the container.
+      # This enables live reloading for development.
+      - ./option-recommender-python:/app
+    # Override CMD to start with hot-reloading for development
+    # Adjust 'fetchOptionData:app' if your main FastAPI file/app instance is different
+    command: uvicorn fetchOptionData:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      # Set PORT environment variable for Python app if it's designed to read it
+      # This is crucial for cloud deployments but good to have for consistency
+      - PORT=8000
+    depends_on:
+      - java-backend # Ensure Java backend is up before starting Python (if they interact)
+
+  # --- Java Spring Boot Backend Service ---
+  java-backend:
+    build:
+      context: ./option-recommender-java
+      dockerfile: Dockerfile # Refers to project/java/Dockerfile
+    ports:
+      - "8080:8080" # Map host port 8080 to container port 8080 (Spring Boot's internal port)
+    volumes:
+      # Mount the entire Java source directory into the container.
+      # This means Maven will re-compile/re-package inside the container if files change.
+      # This can be slow for large Java projects; consider building locally and mounting only JAR.
+      # For dev, it allows code changes to be picked up (though typically requires mvn clean package + restart)
+      - ./option-recommender-java:/app
+      # Optional: Mount Maven cache to speed up builds (requires proper permissions)
+      # - ~/.m2:/root/.m2
+    # Spring Boot automatically runs the `app.jar` as defined in its Dockerfile's CMD
+    # If you want to enable devtools live reload (requires devtools dependency in pom.xml):
+    # command: java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dspring.profiles.active=dev -jar app.jar
+    environment:
+      # Set PORT environment variable for Java app if it's designed to read it
+      - PORT=8080
+
+  # --- React/Vite Frontend Service ---
+  frontend:
+    build:
+      context: ./option-recommender-frontend
+      # For development, you'd usually use the Vite dev server directly.
+      # This requires a Dockerfile configured for Node.js development.
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173" # Vite's default dev server port
+    volumes:
+      - ./option-recommender-frontend:/app           # Mount local source code for live reload
+      - /app/node_modules         # Crucial: Prevent host node_modules from overwriting container's
+    # Command to start the Vite development server
+    command: npm run dev -- --host 0.0.0.0 # --host 0.0.0.0 allows access from outside container
+    environment:
+      # Point the React app to your backend APIs using their Docker service names and ports
+      # This makes sure React talks to the Dockerized backend, not localhost
+      - VITE_PYTHON_API_URL=http://python-api:8000
+      - VITE_JAVA_API_URL=http://java-backend:8080
+    depends_on:
+      - python-api # Frontend needs the backend APIs to be available
+      - java-backend
