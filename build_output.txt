@@ -1,0 +1,157 @@
+time="2025-07-17T00:55:25-04:00" level=warning msg="/home/dhruvesh/Desktop/option-recommender/Options-Trade-Recommender/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+Compose now can delegate build to bake for better performances
+Just set COMPOSE_BAKE=true
+#0 building with "default" instance using docker driver
+
+#1 [java-backend internal] load build definition from Dockerfile
+#1 transferring dockerfile: 224B done
+#1 DONE 0.0s
+
+#2 [java-backend internal] load metadata for docker.io/library/eclipse-temurin:21-jdk-alpine
+#2 DONE 0.2s
+
+#3 [java-backend internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [java-backend 1/4] FROM docker.io/library/eclipse-temurin:21-jdk-alpine@sha256:8e26f8064f2b89bc8543faf43ded3f223f47dd0a7afca042fdc892f1f6a4a8c3
+#4 DONE 0.0s
+
+#5 [java-backend internal] load build context
+#5 transferring context: 95B 0.0s done
+#5 DONE 0.0s
+
+#6 [java-backend 2/4] WORKDIR /app
+#6 CACHED
+
+#7 [java-backend 3/4] COPY target/options-recommender-0.0.1-SNAPSHOT.jar app.jar
+#7 CACHED
+
+#8 [java-backend 4/4] RUN chmod +x app.jar
+#8 CACHED
+
+#9 [java-backend] exporting to image
+#9 exporting layers done
+#9 writing image sha256:d907c953af65109f4a6b3c7798a67b9b64f2635f2be1ff0d4f1b69c8e0541b1e
+#9 writing image sha256:d907c953af65109f4a6b3c7798a67b9b64f2635f2be1ff0d4f1b69c8e0541b1e done
+#9 naming to docker.io/library/options-trade-recommender-java-backend done
+#9 DONE 0.0s
+
+#10 [java-backend] resolving provenance for metadata file
+#10 DONE 0.1s
+
+#11 [python-api internal] load build definition from Dockerfile
+#11 transferring dockerfile: 380B done
+#11 DONE 0.0s
+
+#12 [python-api internal] load metadata for docker.io/library/python:3.11
+#12 DONE 0.2s
+
+#13 [python-api internal] load .dockerignore
+#13 transferring context: 2B done
+#13 DONE 0.0s
+
+#14 [python-api 1/5] FROM docker.io/library/python:3.11@sha256:ca0b6467f5accb0c39c154a5e242df36348d9afb009a58b4263755d78728a21c
+#14 DONE 0.0s
+
+#15 [python-api internal] load build context
+#15 transferring context: 235B done
+#15 DONE 0.0s
+
+#16 [python-api 2/5] WORKDIR /app
+#16 CACHED
+
+#17 [python-api 3/5] COPY requirements.txt .
+#17 CACHED
+
+#18 [python-api 4/5] RUN pip install --no-cache-dir -r requirements.txt
+#18 CACHED
+
+#19 [python-api 5/5] COPY . .
+#19 CACHED
+
+#20 [python-api] exporting to image
+#20 exporting layers done
+#20 writing image sha256:cd3d7dc6ec35061c14b57be21da16e6d5e2b3f4988687dc5f632ec92bb46acc1 done
+#20 naming to docker.io/library/options-trade-recommender-python-api done
+#20 DONE 0.0s
+
+#21 [python-api] resolving provenance for metadata file
+#21 DONE 0.0s
+
+#22 [frontend internal] load build definition from Dockerfile.dev
+#22 transferring dockerfile: 558B done
+#22 DONE 0.0s
+
+#23 [frontend internal] load metadata for docker.io/library/node:20-alpine
+#23 DONE 0.2s
+
+#24 [frontend internal] load .dockerignore
+#24 transferring context: 2B done
+#24 DONE 0.0s
+
+#25 [frontend 1/5] FROM docker.io/library/node:20-alpine@sha256:df02558528d3d3d0d621f112e232611aecfee7cbc654f6b375765f72bb262799
+#25 DONE 0.0s
+
+#26 [frontend internal] load build context
+#26 transferring context: 842B 0.0s done
+#26 DONE 0.0s
+
+#27 [frontend 2/5] WORKDIR /app
+#27 CACHED
+
+#28 [frontend 3/5] COPY package*.json ./
+#28 CACHED
+
+#29 [frontend 4/5] RUN npm install
+#29 CACHED
+
+#30 [frontend 5/5] COPY . .
+#30 CACHED
+
+#31 [frontend] exporting to image
+#31 exporting layers done
+#31 writing image sha256:889c21a074d2f6bf981b9b28ae3e100b97ffb1e2deb255159cf8c1cb7a3d52b8 done
+#31 naming to docker.io/library/options-trade-recommender-frontend
+#31 naming to docker.io/library/options-trade-recommender-frontend done
+#31 DONE 0.0s
+
+#32 [frontend] resolving provenance for metadata file
+#32 DONE 0.0s
+ frontend  Built
+ java-backend  Built
+ python-api  Built
+ Network options-trade-recommender_default  Creating
+ Network options-trade-recommender_default  Created
+ Container options-trade-recommender-java-backend-1  Creating
+ Container options-trade-recommender-java-backend-1  Created
+ Container options-trade-recommender-python-api-1  Creating
+ Container options-trade-recommender-python-api-1  Created
+ Container options-trade-recommender-frontend-1  Creating
+ Container options-trade-recommender-frontend-1  Created
+Attaching to frontend-1, java-backend-1, python-api-1
+java-backend-1  | Error: Unable to access jarfile /app.jar
+[Kjava-backend-1 exited with code 1
+python-api-1    | INFO:     Will watch for changes in these directories: ['/app']
+python-api-1    | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+python-api-1    | INFO:     Started reloader process [1] using StatReload
+frontend-1      | 
+frontend-1      | > options-ui@0.0.0 dev
+frontend-1      | > vite --host 0.0.0.0
+frontend-1      | 
+python-api-1    | INFO:     Started server process [8]
+python-api-1    | INFO:     Waiting for application startup.
+python-api-1    | INFO:     Application startup complete.
+frontend-1      | 
+frontend-1      |   VITE v7.0.4  ready in 1600 ms
+frontend-1      | 
+frontend-1      |   ➜  Local:   http://localhost:5173/
+frontend-1      |   ➜  Network: http://172.18.0.2:5173/
+Gracefully stopping... (press Ctrl+C again to force)
+ Container options-trade-recommender-frontend-1  Stopping
+ Container options-trade-recommender-frontend-1  Stopped
+ Container options-trade-recommender-python-api-1  Stopping
+ Container options-trade-recommender-python-api-1  Stopped
+ Container options-trade-recommender-java-backend-1  Stopping
+ Container options-trade-recommender-java-backend-1  Stopped
+exit status 130

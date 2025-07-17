@@ -2,7 +2,8 @@
 # Stage 1: Build the React/Vite application
 FROM node:18 AS builder
 
-WORKDIR /app # This /app is the root of your React project INSIDE the container for building
+# This /app is the root of your React project INSIDE the container for building
+WORKDIR /app 
 
 # Copy package.json and package-lock.json (or yarn.lock) first.
 COPY package*.json ./

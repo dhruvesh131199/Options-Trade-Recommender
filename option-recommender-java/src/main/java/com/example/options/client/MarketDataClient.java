@@ -16,21 +16,21 @@ public class MarketDataClient{
     private final RestTemplate restTemplate = new RestTemplate();
 
     public List<Option> getOptionsForTicker(String ticker){
-        String url = "http://localhost:8000/options/" + ticker.toUpperCase();
+        String url = "http://python-api:8000/options/" + ticker.toUpperCase();
 
         ResponseEntity<Option[]> response = restTemplate.getForEntity(url, Option[].class);
         return Arrays.asList(response.getBody());
     }
 
     public ExpiryStrikeResponse getExpiryStrike(String ticker, String strategy){
-        String url = "http://localhost:8000/options/" + ticker.toUpperCase() + "/" +strategy.toLowerCase();
+        String url = "http://python-api:8000/options/" + ticker.toUpperCase() + "/" +strategy.toLowerCase();
 
         ResponseEntity<ExpiryStrikeResponse> response = restTemplate.getForEntity(url, ExpiryStrikeResponse.class);
         return response.getBody();
     }
 
     public void testfetch(String ticker, String strategy){
-        String url = "http://localhost:8000/options/" + ticker.toUpperCase() + "/" + strategy.toLowerCase();
+        String url = "http://python-api:8000/options/" + ticker.toUpperCase() + "/" + strategy.toLowerCase();
 
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
         System.out.println("RAW JSON = " + response.getBody());

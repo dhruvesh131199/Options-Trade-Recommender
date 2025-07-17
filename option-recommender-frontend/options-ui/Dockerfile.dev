@@ -1,5 +1,6 @@
 # frontend/Dockerfile.dev
-FROM node:18-alpine # Alpine for a smaller image
+# Alpine for a smaller image
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -17,4 +18,4 @@ EXPOSE 5173
 
 # Default command to start the Vite dev server
 # This will be overridden by the docker-compose.yml 'command' for dev-specific settings
-CMD ["npm", "run", "dev""--", "--host", "0.0.0.0"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

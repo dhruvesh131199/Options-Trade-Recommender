@@ -6,6 +6,7 @@
 
 # Python specific ignores
 option-recommender-python/.venv/
+option-recommender-python/venv/
 option-recommender-python/__pycache__/
 option-recommender-python/*.pyc
 option-recommender-python/.pytest_cache/
@@ -15,7 +16,7 @@ option-recommender-python/build/
 option-recommender-python/dist/
 
 # Java specific ignores
-option-recommender-java/target/           # Build output from Maven/Gradle
+option-recommender-java/.target/          # Gradle specific build cache
 option-recommender-java/.gradle/          # Gradle specific build cache
 option-recommender-java/build/            # Gradle build output
 option-recommender-java/.idea/            # IntelliJ IDE files
@@ -35,3 +36,9 @@ option-recommender-frontend/option-ui/temp/
 Dockerfile
 docker-compose.yml
 .dockerignore
+
+
+
+
+#docker compose down --volumes --rmi all
+#docker system prune -a --volumes
