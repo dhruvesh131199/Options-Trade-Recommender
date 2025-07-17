@@ -47,11 +47,6 @@ services:
       - /app/node_modules         # Crucial: Prevent host node_modules from overwriting container's
     # Command to start the Vite development server
     command: npm run dev -- --host 0.0.0.0 # --host 0.0.0.0 allows access from outside container
-    environment:
-      # Point the React app to your backend APIs using their Docker service names and ports
-      # This makes sure React talks to the Dockerized backend, not localhost
-      - VITE_PYTHON_API_URL=http://python-api:8000
-      - VITE_JAVA_API_URL=http://java-backend:8080
     depends_on:
       - python-api # Frontend needs the backend APIs to be available
       - java-backend

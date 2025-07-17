@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const javaApiBaseUrl = import.meta.env.VITE_JAVA_API_URL || "http://java-backend:8080";
+const javaUrl = import.meta.env.VITE_BACKEND_URL;
 
 const tickers = ["AAPL", "MSFT", "GOOG", "NVDA", "TSLA", "AMZN"];
 const strategies = ["covered call", "protective put"];
@@ -13,7 +13,7 @@ function ExpiryStrikeFetcher({ onDataFetched }) {
 
   const fetchExpiryStrike = async () => {
     try {
-      const response = await axios.post("http://localhost:8080/expiries_and_strikes", {
+      const response = await axios.post(`${javaUrl}/expiries_and_strikes`, {
         ticker,
         strategy,
       });

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react"; // <--- Import useEffect
 
-//const pythonApiBaseUrl = import.meta.env.VITE_PYTHON_API_URL || "http://localhost:8000";
-const javaApiBaseUrl = import.meta.env.VITE_JAVA_API_URL || "http://java-backend:8080";
+const javaUrl = import.meta.env.VITE_BACKEND_URL;
 
 function RecommendationFetcher({ ticker, strategy, expiries, strikes }) {
   // Initialize with empty string, as the actual default will be set by useEffect
@@ -33,7 +32,7 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes }) {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch("http://localhost:8080/recommend", {
+      const response = await fetch(`${javaUrl}/recommend`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
