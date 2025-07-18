@@ -3,11 +3,11 @@ name: Monorepo CI/CD to GCP Cloud Run
 on:
   push:
     branches:
-      - main # This workflow triggers on pushes to the 'main' branch
+      - main
 
 env:
-  GCP_PROJECT_ID: option-recommender 
-  GCP_REGION: us-central1             
+  GCP_PROJECT_ID: your-gcp-project-id
+  GCP_REGION: us-central1
 
 jobs:
   # --- Deploy Python FastAPI Backend Service ---
@@ -20,11 +20,23 @@ jobs:
       - name: Check for Python Backend Changes
         id: check_python_changes
         run: |
-          git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-python/ || echo "python_changed=true" >> "$GITHUB_OUTPUT"
-        if: steps.check_python_changes.outputs.python_changed == 'true'
+          echo "--- Debugging Python Changes ---"
+          echo "Current directory contents:"
+          ls -laR ./option-recommender-python/
+
+          # Check for changes
+          if git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-python/; then
+            echo "No changes detected in option-recommender-python/"
+            echo "python_changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected in option-recommender-python/"
+            echo "python_changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Debug Output
+        run: echo "Python Changed Output: ${{ steps.check_python_changes.outputs.python_changed }}"
 
       - name: Authenticate to GCP
-        if: steps.check_python_changes.outputs.python_changed == 'true'
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
@@ -36,12 +48,9 @@ jobs:
           service: recommender-python-api
           region: ${{ env.GCP_REGION }}
           source: ./option-recommender-python
-          # Removed --min-instances 1 to allow scaling to zero for free tier
           flags: |
             --allow-unauthenticated
             --port 8000
-          # env: # Optional: Pass environment variables to the Cloud Run service
-          #   DB_HOST: ${{ secrets.PYTHON_DB_HOST }}
 
   # --- Deploy Java Spring Boot Backend Service ---
   deploy-java-backend:
@@ -53,21 +62,27 @@ jobs:
       - name: Check for Java Backend Changes
         id: check_java_changes
         run: |
-          git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-java/ || echo "java_changed=true" >> "$GITHUB_OUTPUT"
-        if: steps.check_java_changes.outputs.java_changed == 'true'
+          echo "--- Debugging Java Changes ---"
+          echo "Current directory contents:"
+          ls -laR ./option-recommender-java/
+
+          if git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-java/; then
+            echo "java_changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "java_changed=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Authenticate to GCP
-        if: steps.check_java_changes.outputs.java_changed == 'true'
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Set up JDK 21
+      - name: Set up JDK 17
         if: steps.check_java_changes.outputs.java_changed == 'true'
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '17'
 
       - name: Build Java Backend with Maven
         if: steps.check_java_changes.outputs.java_changed == 'true'
@@ -81,12 +96,9 @@ jobs:
           service: recommender-java-backend
           region: ${{ env.GCP_REGION }}
           source: ./option-recommender-java
-          # Removed --min-instances 1 to allow scaling to zero for free tier
           flags: |
             --allow-unauthenticated
             --port 8080
-          # env: # Optional: Pass environment variables to the Cloud Run service
-          #   DB_HOST: ${{ secrets.JAVA_DB_HOST }}
 
   # --- Deploy React/Vite Frontend Service ---
   deploy-frontend:
@@ -98,11 +110,17 @@ jobs:
       - name: Check for Frontend Changes
         id: check_frontend_changes
         run: |
-          git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-frontend/options-ui/ || echo "frontend_changed=true" >> "$GITHUB_OUTPUT"
-        if: steps.check_frontend_changes.outputs.frontend_changed == 'true'
+          echo "--- Debugging Frontend Changes ---"
+          echo "Current directory contents:"
+          ls -laR ./option-recommender-frontend/options-ui/
+
+          if git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-frontend/options-ui/; then
+            echo "frontend_changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "frontend_changed=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Authenticate to GCP
-        if: steps.check_frontend_changes.outputs.frontend_changed == 'true'
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
@@ -113,14 +131,13 @@ jobs:
         with:
           node-version: '18'
 
-          # --- Create .env.production file for React build ---
       - name: Create .env.production
         if: steps.check_frontend_changes.outputs.frontend_changed == 'true'
         run: |
           echo "REACT_APP_JAVA_API_URL=${{ secrets.REACT_APP_JAVA_API_URL }}" > ./option-recommender-frontend/options-ui/.env.production
           echo "REACT_APP_PYTHON_API_URL=${{ secrets.REACT_APP_PYTHON_API_URL }}" >> ./option-recommender-frontend/options-ui/.env.production
-          cat ./option-recommender-frontend/options-ui/.env.production # For debugging: print content
-          # --- END NEW STEP ---
+          echo "Contents of .env.production:"
+          cat ./option-recommender-frontend/options-ui/.env.production
 
       - name: Install Frontend Dependencies
         if: steps.check_frontend_changes.outputs.frontend_changed == 'true'
@@ -139,7 +156,6 @@ jobs:
           service: recommender-frontend-service
           region: ${{ env.GCP_REGION }}
           source: ./option-recommender-frontend/options-ui
-          # Removed --min-instances 1 to allow scaling to zero for free tier
           flags: |
             --allow-unauthenticated
             --port 80
