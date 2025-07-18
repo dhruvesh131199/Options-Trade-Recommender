@@ -1,33 +1,34 @@
+# frontend/options-ui/Dockerfile
+
 # Stage 1: Build the React/Vite application
-FROM node:18 AS builder
+FROM node:20 AS builder
 
-WORKDIR /app # This /app is the root of your React project INSIDE the container for building
+WORKDIR /app
 
-# Copy package.json and package-lock.json (or yarn.lock) first.
+# Copy package.json and lock
 COPY package*.json ./
 
-# Install project dependencies
+# Install dependencies
 RUN npm install
 
-# Copy the rest of your application code (src, public, etc.)
+# Copy source code
 COPY . .
 
-# Build the React/Vite application for production
+# Build for production
 RUN npm run build
 
 # Stage 2: Serve the static files using Nginx
 FROM nginx:alpine
 
-# Copy the custom Nginx configuration file
-# Assumes nginx.conf is now in the same directory as this Dockerfile (options-ui)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy the built static files from the 'builder' stage to Nginx's default html directory
-# The 'dist' folder will be directly under /app in the builder stage
+# Copy built app from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 80, which Nginx will listen on
-EXPOSE 80
+# Listen on port 8080 for GCP compatibility
+EXPOSE 8080
 
-# Command to start Nginx in the foreground
+# Override default port in nginx
+ENV PORT=8080
+
 CMD ["nginx", "-g", "daemon off;"]
