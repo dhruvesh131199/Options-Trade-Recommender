@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  GCP_PROJECT_ID: options-recommender
+  GCP_PROJECT_ID: your-gcp-project-id
   GCP_REGION: us-central1
 
 jobs:
@@ -24,16 +24,16 @@ jobs:
           echo "Current directory contents:"
           ls -laR ./option-recommender-python/
 
-          if git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-python/; then
+          if git diff --quiet "${{ github.event.before }}" "${{ github.sha }}" -- option-recommender-python/; then
             echo "No changes detected in option-recommender-python/"
-            echo "::set-output name=python_changed::false"
+            echo "python_changed=false" >> $GITHUB_OUTPUT
           else
             echo "Changes detected in option-recommender-python/"
-            echo "::set-output name=python_changed::true"
+            echo "python_changed=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Debug Output
-        run: echo "Python Changed Output: ${{ steps.check_python_changes.outputs.python_changed }}"
+        run: echo "Python Changed: ${{ steps.check_python_changes.outputs.python_changed }}"
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
@@ -65,11 +65,16 @@ jobs:
           echo "Current directory contents:"
           ls -laR ./option-recommender-java/
 
-          if git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-java/; then
-            echo "::set-output name=java_changed::false"
+          if git diff --quiet "${{ github.event.before }}" "${{ github.sha }}" -- option-recommender-java/; then
+            echo "No changes detected in option-recommender-java/"
+            echo "java_changed=false" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=java_changed::true"
+            echo "Changes detected in option-recommender-java/"
+            echo "java_changed=true" >> $GITHUB_OUTPUT
           fi
+
+      - name: Debug Output
+        run: echo "Java Changed: ${{ steps.check_java_changes.outputs.java_changed }}"
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
@@ -113,11 +118,16 @@ jobs:
           echo "Current directory contents:"
           ls -laR ./option-recommender-frontend/options-ui/
 
-          if git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-frontend/options-ui/; then
-            echo "::set-output name=frontend_changed::false"
+          if git diff --quiet "${{ github.event.before }}" "${{ github.sha }}" -- option-recommender-frontend/options-ui/; then
+            echo "No changes detected in option-recommender-frontend/options-ui/"
+            echo "frontend_changed=false" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=frontend_changed::true"
+            echo "Changes detected in option-recommender-frontend/options-ui/"
+            echo "frontend_changed=true" >> $GITHUB_OUTPUT
           fi
+
+      - name: Debug Output
+        run: echo "Frontend Changed: ${{ steps.check_frontend_changes.outputs.frontend_changed }}"
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
