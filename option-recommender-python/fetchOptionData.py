@@ -87,3 +87,6 @@ def get_expiries_and_strikes(ticker: str, strategy: str):
     
     except Exception as e:
         return {"error": str(e)}
+
+def hello():
+    hello = "hello brother"
