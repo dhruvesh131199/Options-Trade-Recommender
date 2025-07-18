@@ -1,0 +1,136 @@
+name: Monorepo CI/CD to GCP Cloud Run
+
+on:
+  push:
+    branches:
+      - main # This workflow triggers on pushes to the 'main' branch
+
+env:
+  GCP_PROJECT_ID: your-gcp-project-id # <<< REPLACE THIS with your actual GCP Project ID!
+  GCP_REGION: us-central1             # Your desired GCP region. Keep it consistent (e.g., us-central1)
+
+jobs:
+  # --- Deploy Python FastAPI Backend Service ---
+  deploy-python-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for Python Backend Changes
+        id: check_python_changes
+        run: |
+          git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-python/ || echo "python_changed=true" >> "$GITHUB_OUTPUT"
+        # The 'if' condition on subsequent steps will use this output
+        if: steps.check_python_changes.outputs.python_changed == 'true' # Only run if python code changed
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Deploy Python Backend to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: recommender-python-api # Name your Cloud Run service for Python
+          region: ${{ env.GCP_REGION }}
+          # Image will be stored in Artifact Registry under your project ID
+          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/recommender-python-api:${{ github.sha }}
+          source: ./option-recommender-python # Dockerfile for Python is here
+          min_instances: 1 # Crucial: Keeps 1 instance warm to avoid cold starts
+          allow_unauthenticated: true # Allow public access to this API
+          port: 8000 # Your Python app's port as defined in Dockerfile/command
+          # Example of passing environment variables to the Cloud Run service
+          # env:
+          #   DB_HOST: ${{ secrets.PYTHON_DB_HOST }} # These should be GitHub Secrets
+          #   DB_USER: ${{ secrets.PYTHON_DB_USER }}
+
+  # --- Deploy Java Spring Boot Backend Service ---
+  deploy-java-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for Java Backend Changes
+        id: check_java_changes
+        run: |
+          git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-java/ || echo "java_changed=true" >> "$GITHUB_OUTPUT"
+        if: steps.check_java_changes.outputs.java_changed == 'true' # Only run if java code changed
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin' # Recommended for OpenJDK
+          java-version: '21'
+
+      - name: Build Java Backend with Maven
+        # Adjust 'mvn clean package -DskipTests' if you use Gradle
+        run: mvn clean package -DskipTests
+        working-directory: ./option-recommender-java # Run this command in the Java directory
+
+      - name: Deploy Java Backend to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: recommender-java-backend # Name your Cloud Run service for Java
+          region: ${{ env.GCP_REGION }}
+          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/recommender-java-backend:${{ github.sha }}
+          source: ./option-recommender-java # Dockerfile for Java is here
+          min_instances: 1
+          allow_unauthenticated: true
+          port: 8080 # Your Java app's port
+
+          # env:
+          #   DB_HOST: ${{ secrets.JAVA_DB_HOST }}
+
+  # --- Deploy React/Vite Frontend Service ---
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for Frontend Changes
+        id: check_frontend_changes
+        run: |
+          git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-frontend/options-ui/ || echo "frontend_changed=true" >> "$GITHUB_OUTPUT"
+        if: steps.check_frontend_changes.outputs.frontend_changed == 'true' # Only run if frontend code changed
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # Use Node 18 as per your Dockerfile
+
+      - name: Install Frontend Dependencies
+        run: npm ci # Use `npm ci` for clean installs in CI
+        working-directory: ./option-recommender-frontend/options-ui
+
+      - name: Build React App
+        run: npm run build
+        working-directory: ./option-recommender-frontend/options-ui
+        env:
+          # Pass environment variables to the React build process
+          # IMPORTANT: THESE WILL BE YOUR ACTUAL CLOUD RUN SERVICE URLs AFTER INITIAL BACKEND DEPLOYMENT!
+          REACT_APP_JAVA_API_URL: https://YOUR_ACTUAL_JAVA_CLOUD_RUN_URL.run.app # <<< REPLACE THIS!
+          REACT_APP_PYTHON_API_URL: https://YOUR_ACTUAL_PYTHON_CLOUD_RUN_URL.run.app # <<< REPLACE THIS!
+
+      - name: Deploy Frontend to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: recommender-frontend-service # Name your Cloud Run service for React
+          region: ${{ env.GCP_REGION }}
+          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/recommender-frontend-service:${{ github.sha }}
+          source: ./option-recommender-frontend/options-ui # Dockerfile for React is here
+          min_instances: 1 # Crucial: Keeps 1 instance warm to avoid cold starts for recruiters
+          allow_unauthenticated: true # Allow public access to your frontend
+          port: 80 # Nginx listens on port 80 in your Dockerfile
