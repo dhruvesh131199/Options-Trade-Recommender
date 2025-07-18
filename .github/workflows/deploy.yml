@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  GCP_PROJECT_ID: your-gcp-project-id
+  GCP_PROJECT_ID: options-recommender
   GCP_REGION: us-central1
 
 jobs:
@@ -24,13 +24,12 @@ jobs:
           echo "Current directory contents:"
           ls -laR ./option-recommender-python/
 
-          # Check for changes
           if git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-python/; then
             echo "No changes detected in option-recommender-python/"
-            echo "python_changed=false" >> $GITHUB_OUTPUT
+            echo "::set-output name=python_changed::false"
           else
             echo "Changes detected in option-recommender-python/"
-            echo "python_changed=true" >> $GITHUB_OUTPUT
+            echo "::set-output name=python_changed::true"
           fi
 
       - name: Debug Output
@@ -67,9 +66,9 @@ jobs:
           ls -laR ./option-recommender-java/
 
           if git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-java/; then
-            echo "java_changed=false" >> $GITHUB_OUTPUT
+            echo "::set-output name=java_changed::false"
           else
-            echo "java_changed=true" >> $GITHUB_OUTPUT
+            echo "::set-output name=java_changed::true"
           fi
 
       - name: Authenticate to GCP
@@ -115,9 +114,9 @@ jobs:
           ls -laR ./option-recommender-frontend/options-ui/
 
           if git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-frontend/options-ui/; then
-            echo "frontend_changed=false" >> $GITHUB_OUTPUT
+            echo "::set-output name=frontend_changed::false"
           else
-            echo "frontend_changed=true" >> $GITHUB_OUTPUT
+            echo "::set-output name=frontend_changed::true"
           fi
 
       - name: Authenticate to GCP
