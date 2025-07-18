@@ -6,8 +6,8 @@ on:
       - main # This workflow triggers on pushes to the 'main' branch
 
 env:
-  GCP_PROJECT_ID: your-gcp-project-id # <<< REPLACE THIS with your actual GCP Project ID!
-  GCP_REGION: us-central1             # Your desired GCP region. Keep it consistent (e.g., us-central1)
+  GCP_PROJECT_ID: option-recommender 
+  GCP_REGION: us-central1             
 
 jobs:
   # --- Deploy Python FastAPI Backend Service ---
@@ -21,7 +21,7 @@ jobs:
         id: check_python_changes
         run: |
           git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-python/ || echo "python_changed=true" >> "$GITHUB_OUTPUT"
-        if: steps.check_python_changes.outputs.python_changed == 'true' # Only run if python code changed
+        if: steps.check_python_changes.outputs.python_changed == 'true'
 
       - name: Authenticate to GCP
         if: steps.check_python_changes.outputs.python_changed == 'true'
@@ -33,12 +33,11 @@ jobs:
         if: steps.check_python_changes.outputs.python_changed == 'true'
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: recommender-python-api # Name your Cloud Run service for Python
+          service: recommender-python-api
           region: ${{ env.GCP_REGION }}
-          source: ./option-recommender-python # Dockerfile for Python is here
-          # Pass Cloud Run specific flags using the 'flags' input
+          source: ./option-recommender-python
+          # Removed --min-instances 1 to allow scaling to zero for free tier
           flags: |
-            --min-instances 1
             --allow-unauthenticated
             --port 8000
           # env: # Optional: Pass environment variables to the Cloud Run service
@@ -55,7 +54,7 @@ jobs:
         id: check_java_changes
         run: |
           git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-java/ || echo "java_changed=true" >> "$GITHUB_OUTPUT"
-        if: steps.check_java_changes.outputs.java_changed == 'true' # Only run if java code changed
+        if: steps.check_java_changes.outputs.java_changed == 'true'
 
       - name: Authenticate to GCP
         if: steps.check_java_changes.outputs.java_changed == 'true'
@@ -63,27 +62,27 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         if: steps.check_java_changes.outputs.java_changed == 'true'
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin' # Recommended for OpenJDK
-          java-version: '17'
+          distribution: 'temurin'
+          java-version: '21'
 
       - name: Build Java Backend with Maven
         if: steps.check_java_changes.outputs.java_changed == 'true'
-        run: mvn clean package -DskipTests # Adjust if you use Gradle
-        working-directory: ./option-recommender-java # Run this command in the Java directory
+        run: mvn clean package -DskipTests
+        working-directory: ./option-recommender-java
 
       - name: Deploy Java Backend to Cloud Run
         if: steps.check_java_changes.outputs.java_changed == 'true'
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: recommender-java-backend # Name your Cloud Run service for Java
+          service: recommender-java-backend
           region: ${{ env.GCP_REGION }}
-          source: ./option-recommender-java # Dockerfile for Java is here
+          source: ./option-recommender-java
+          # Removed --min-instances 1 to allow scaling to zero for free tier
           flags: |
-            --min-instances 1
             --allow-unauthenticated
             --port 8080
           # env: # Optional: Pass environment variables to the Cloud Run service
@@ -100,7 +99,7 @@ jobs:
         id: check_frontend_changes
         run: |
           git diff --quiet ${{ github.event.before }} ${{ github.sha }} -- option-recommender-frontend/options-ui/ || echo "frontend_changed=true" >> "$GITHUB_OUTPUT"
-        if: steps.check_frontend_changes.outputs.frontend_changed == 'true' # Only run if frontend code changed
+        if: steps.check_frontend_changes.outputs.frontend_changed == 'true'
 
       - name: Authenticate to GCP
         if: steps.check_frontend_changes.outputs.frontend_changed == 'true'
@@ -112,31 +111,35 @@ jobs:
         if: steps.check_frontend_changes.outputs.frontend_changed == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: '18' # Use Node 18 as per your Dockerfile
+          node-version: '18'
+
+          # --- Create .env.production file for React build ---
+      - name: Create .env.production
+        if: steps.check_frontend_changes.outputs.frontend_changed == 'true'
+        run: |
+          echo "REACT_APP_JAVA_API_URL=${{ secrets.REACT_APP_JAVA_API_URL }}" > ./option-recommender-frontend/options-ui/.env.production
+          echo "REACT_APP_PYTHON_API_URL=${{ secrets.REACT_APP_PYTHON_API_URL }}" >> ./option-recommender-frontend/options-ui/.env.production
+          cat ./option-recommender-frontend/options-ui/.env.production # For debugging: print content
+          # --- END NEW STEP ---
 
       - name: Install Frontend Dependencies
         if: steps.check_frontend_changes.outputs.frontend_changed == 'true'
-        run: npm ci # Use `npm ci` for clean installs in CI
+        run: npm ci
         working-directory: ./option-recommender-frontend/options-ui
 
       - name: Build React App
         if: steps.check_frontend_changes.outputs.frontend_changed == 'true'
         run: npm run build
         working-directory: ./option-recommender-frontend/options-ui
-        env:
-          # Pass environment variables to the React build process
-          # IMPORTANT: THESE WILL BE YOUR ACTUAL CLOUD RUN SERVICE URLs AFTER INITIAL BACKEND DEPLOYMENT!
-          REACT_APP_JAVA_API_URL: https://YOUR_ACTUAL_JAVA_CLOUD_RUN_URL.run.app # <<< REPLACE THIS!
-          REACT_APP_PYTHON_API_URL: https://YOUR_ACTUAL_PYTHON_CLOUD_RUN_URL.run.app # <<< REPLACE THIS!
 
       - name: Deploy Frontend to Cloud Run
         if: steps.check_frontend_changes.outputs.frontend_changed == 'true'
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: recommender-frontend-service # Name your Cloud Run service for React
+          service: recommender-frontend-service
           region: ${{ env.GCP_REGION }}
-          source: ./option-recommender-frontend/options-ui # Dockerfile for React is here
+          source: ./option-recommender-frontend/options-ui
+          # Removed --min-instances 1 to allow scaling to zero for free tier
           flags: |
-            --min-instances 1
             --allow-unauthenticated
-            --port 80 # Nginx listens on port 80 in your Dockerfile
+            --port 80
