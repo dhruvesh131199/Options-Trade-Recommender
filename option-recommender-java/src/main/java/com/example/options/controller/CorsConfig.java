@@ -1,4 +1,4 @@
-package com.example.options.config;
+package com.example.options.controller;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,8 +13,13 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")  // Allow all endpoints
-                        .allowedOrigins("http://localhost:5173"); // Allow your React frontend origin
+            registry.addMapping("/**")
+            .allowedOrigins(
+                "http://localhost:5173", // for local dev
+                "https://option-recommender-frontend-92837797412.europe-west1.run.app" // for deployed frontend
+            )
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*");
             }
         };
     }
