@@ -32,7 +32,7 @@ function ExpiryStrikeFetcher({ onDataFetched }) {
   };
 
   return (
-    <div className="card p-4 shadow mb-4">
+    <div>
       <h4>Step 1: Choose Ticker & Strategy</h4>
 
       <div className="mb-3">

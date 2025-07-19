@@ -54,12 +54,12 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes }) {
       setMessage(JSON.stringify(result, null, 2));
     } catch (error) {
       console.error("Fetch error:", error);
-      setMessage(`Failed to get recommendation: ${error.message || error}`);
+      setMessage("Failed to get recommendation, please try again later");
     }
   };
 
   return (
-    <div className="card p-4 shadow">
+    <div>
       <h4>Step 2: Choose Expiry & Strike</h4>
       <p><strong>Ticker:</strong> {ticker} &nbsp;&nbsp; <strong>Strategy:</strong> {strategy}</p>
 
@@ -104,7 +104,7 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes }) {
       )}
 
 
-      {message && <div className="alert alert-info mt-3"><pre>{message}</pre></div>}
+      {message && <div className="text-wrap overflow-auto alert alert-info mt-3"><pre>{message}</pre></div>}
     </div>
   );
 }
