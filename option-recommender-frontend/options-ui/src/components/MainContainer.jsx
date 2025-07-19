@@ -24,23 +24,12 @@ function MainContainer() {
               </div>
             </div>
             <div class="col">
+              {optionData ? 
               <div class="card shadow-sm">
                 <div class="card-body">
-                    {optionData ? ( // Conditionally render the RecommendationFetcher
                     <RecommendationFetcher {...optionData} />
-                    ) : (
-                        // This is the placeholder content for the RecommendationFetcher's column
-                        // when no data has been fetched yet.
-                        // We use the same card styling to keep a consistent look.
-                        <div className="card p-4 shadow" style={{ minHeight: '300px' }}>
-                        <h4>Step 2: Choose Expiry & Strike</h4>
-                        <div className="alert alert-warning mt-4 text-center">
-                            Please fetch expiries and strikes first.
-                        </div>
-                        </div>
-                    )}
                 </div>
-              </div>
+              </div>: null}
             </div>
           </div>
         </div>
