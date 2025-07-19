@@ -51,4 +51,9 @@ public class OptionsController {
         return "Welcome to the Options Recommender API!";
     }
 
+    @PostMapping("/candles")
+    public List<CandleResponse> candles(@RequestBody String ticker){
+        return mdc.getCandles(ticker);
+    }
+
 }

@@ -14,7 +14,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-@app.get("/options/{ticker}")
+@app.get("options/{ticker}")
 def get_options(ticker: str):
     try:
         stock = yf.Ticker(ticker)
@@ -57,7 +57,7 @@ def get_options(ticker: str):
         return {"error": str(e)}
     
 
-@app.get("/options/{ticker}/{strategy}")
+@app.get("/expiry_and_strikes/{ticker}/{strategy}")
 def get_expiries_and_strikes(ticker: str, strategy: str):
     try:
         stock = yf.Ticker(ticker)
@@ -88,5 +88,25 @@ def get_expiries_and_strikes(ticker: str, strategy: str):
     except Exception as e:
         return {"error": str(e)}
 
-def hello():
-    hello = "hello brother"
+@app.get("/candles/{ticker}")
+def getCandles(ticker: str):
+    data = yf.download(ticker.upper(), period="2mo", interval="1d")
+
+    data.columns = [col[0] for col in data.columns]
+    data = data.sort_values(by='Date')
+
+    candles = []
+
+    for idx, row in data.iterrows():
+        time_unix = int(idx.timestamp())
+        candles.append({
+            "time": int(time_unix),
+            "open": round(row["Open"], 2),
+            "high": round(row["High"], 2),
+            "low": round(row["Low"], 2),
+            "close": round(row["Close"], 2),
+        })
+
+    return candles
+
+print(getCandles("AAPL"))

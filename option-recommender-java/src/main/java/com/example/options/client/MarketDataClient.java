@@ -1,6 +1,7 @@
 package com.example.options.client;
 
 import com.example.options.model.Option;
+import com.example.options.model.CandleResponse;
 import com.example.options.model.ExpiryStrikeResponse;
 import org.springframework.stereotype.Component;
 
@@ -20,17 +21,24 @@ public class MarketDataClient{
     private String python_api_url;
 
     public List<Option> getOptionsForTicker(String ticker){
-        String url = python_api_url + ticker.toUpperCase();
+        String url = python_api_url + "options/" + ticker.toUpperCase();
 
         ResponseEntity<Option[]> response = restTemplate.getForEntity(url, Option[].class);
         return Arrays.asList(response.getBody());
     }
 
     public ExpiryStrikeResponse getExpiryStrike(String ticker, String strategy){
-        String url = python_api_url +ticker.toUpperCase() + "/" +strategy.toLowerCase();
+        String url = python_api_url +"expiry_and_strikes/"+ticker.toUpperCase() + "/" +strategy.toLowerCase();
 
         ResponseEntity<ExpiryStrikeResponse> response = restTemplate.getForEntity(url, ExpiryStrikeResponse.class);
         return response.getBody();
+    }
+
+    public List<CandleResponse> getCandles(String ticker){
+        String url = python_api_url + "candles/" + ticker.toUpperCase();
+        
+        ResponseEntity<CandleResponse[]> response = restTemplate.getForEntity(url, CandleResponse[].class);
+        return Arrays.asList(response.getBody());
     }
 
     public void testfetch(String ticker, String strategy){

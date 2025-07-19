@@ -3,7 +3,9 @@ import MainContainer from "./components/MainContainer";
 
 function App() {
   return (
-      <MainContainer />
+    <div className="min-vh-100">
+      <MainContainer/>
+    </div>
   );
 }
 
