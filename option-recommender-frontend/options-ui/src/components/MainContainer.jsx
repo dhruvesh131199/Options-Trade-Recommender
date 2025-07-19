@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import ExpiryStrikeFetcher from "./ExpiryStrikeFetcher";
 import RecommendationFetcher from "./RecommendationFetcher";
 import ChartFetcher from "./ChartFetcher";
-import { ErrorBoundary } from "./ErrorBoundary";
+//import { ErrorBoundary } from "./ErrorBoundary";
 
 function MainContainer() {
   const [optionData, setOptionData] = useState(null);
@@ -25,6 +25,15 @@ function MainContainer() {
             </div>
 
             <div className="col">
+                {optionData ? 
+                  <div className="card shadow-sm">
+                    <div className="card-body">
+                      <ChartFetcher ticker={optionData.ticker} />
+                    </div>
+                  </div>: null}
+            </div>
+
+            <div className="col">
               {optionData ? 
               <div className="card shadow-sm">
                 <div className="card-body">
@@ -35,11 +44,6 @@ function MainContainer() {
           </div>
         </div>
       </div>
-
-      {/* <ErrorBoundary>
-        {optionData ? 
-              <ChartFetcher ticker={optionData.ticker} />: null}
-      </ErrorBoundary> */}
     </main>
   );
 }

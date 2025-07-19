@@ -90,7 +90,7 @@ def get_expiries_and_strikes(ticker: str, strategy: str):
 
 @app.get("/candles/{ticker}")
 def getCandles(ticker: str):
-    data = yf.download(ticker.upper(), period="2mo", interval="1d")
+    data = yf.download(ticker.upper(), period="1y", interval="1d")
 
     data.columns = [col[0] for col in data.columns]
     data = data.sort_values(by='Date')
