@@ -1,49 +1,113 @@
-// ChartFetcher.jsx
-import React, { useEffect, useState } from "react";
-import CandleChart from "./CandleChart";
+import React, { useState, useEffect } from "react"; // <--- Import useEffect
 
 const javaUrl = import.meta.env.VITE_BACKEND_URL;
 
-function ChartFetcher({ ticker }) {
-  const [candles, setCandles] = useState([]);
-  const [error, setError] = useState(null);
+function RecommendationFetcher({ ticker, strategy, expiries, strikes }) {
+  // Initialize with empty string, as the actual default will be set by useEffect
+  const [selectedExpiry, setSelectedExpiry] = useState("");
+  const [selectedStrike, setSelectedStrike] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
+  // This useEffect will run whenever 'expiries' or 'strikes' props change
   useEffect(() => {
-    if (!ticker) return;
+    setLoading(true);
+    // Update selectedExpiry if expiries array has elements
+    if (expiries && expiries.length > 0) {
+      setSelectedExpiry(expiries[0]);
+    } else {
+      setSelectedExpiry(""); // Clear if expiries become empty
+    }
 
-    const fetchCandles = async () => {
-      try {
-        const res = await fetch(`${javaUrl}/candles`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "text/plain",
-          },
-          body: ticker, 
-        });
-        const data = await res.json();
-        setCandles(data);
-        setError(null);
-      } catch (err) {
-        console.error("Failed to fetch candle data:", err);
-        setError("Error loading chart");
+    // Update selectedStrike if strikes array has elements
+    if (strikes && strikes.length > 0) {
+      setSelectedStrike(strikes[0]);
+    } else {
+      setSelectedStrike(""); // Clear if strikes become empty
+    }
+
+    // Also a good idea to clear the previous recommendation message
+    setMessage("");
+
+  }, [expiries, strikes]); // Dependency array: tells useEffect to re-run when these values change
+
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch(`${javaUrl}/recommend`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ticker,
+          strategy,
+          expiry: selectedExpiry,
+          strike: selectedStrike,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text(); // Get more specific error from response body
+        throw new Error(`HTTP error! status: ${response.status}. Message: ${errorText}`);
       }
-    };
 
-    fetchCandles();
-  }, [ticker]);
-
-  if (!ticker) return null;
+      const result = await response.json();
+      setMessage(JSON.stringify(result, null, 2));
+    } catch (error) {
+      console.error("Fetch error:", error);
+      setMessage("Failed to get recommendation, please try again later");
+    }
+  };
 
   return (
     <div>
-      <h5 className="card-title">{ticker} Candlestick Chart</h5>
-      {error ? (
-        <div className="text-danger">{error}</div>
+      <h4>Step 2: Choose Expiry & Strike</h4>
+      <p><strong>Ticker:</strong> {ticker} &nbsp;&nbsp; <strong>Strategy:</strong> {strategy}</p>
+
+      {/* Check if expiries/strikes are available before rendering selects */}
+      {expiries && expiries.length > 0 && strikes && strikes.length > 0 ? (
+        <>
+          <div className="mb-3">
+            <label className="form-label">Select Expiry</label>
+            <select
+              className="form-select"
+              value={selectedExpiry}
+              onChange={(e) => setSelectedExpiry(e.target.value)}
+            >
+              {expiries.map((exp, i) => (
+                <option key={i} value={exp}>{exp}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Select Strike</label>
+            <p className="fw-bold">Select a strike price you think stock won't cross before the chosen expiry</p>
+            <select
+              className="form-select"
+              value={selectedStrike}
+              onChange={(e) => setSelectedStrike(e.target.value)}
+            >
+              {strikes.map((strike, i) => (
+                <option key={i} value={strike}>{strike}</option>
+              ))}
+            </select>
+          </div>
+
+          <button className="btn btn-success" onClick={handleSubmit}>
+            Submit for Recommendation
+          </button>
+        </>
       ) : (
-        <CandleChart data={candles} />
+        <div className="alert alert-warning mt-3">
+          Please fetch expiries and strikes first.
+        </div>
       )}
+
+
+      {message && <div className="text-wrap overflow-auto alert alert-info mt-3"><pre>{message}</pre></div>}
     </div>
   );
 }
 
-export default ChartFetcher;
+export default RecommendationFetcher;

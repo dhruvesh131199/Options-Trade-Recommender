@@ -33,7 +33,7 @@ function ExpiryStrikeFetcher({ onDataFetched }) {
 
   return (
     <div>
-      <h4>Step 1: Choose Ticker & Strategy</h4>
+      <h4>Choose Ticker & Strategy</h4>
 
       <div className="mb-3">
         <label className="form-label">Select Ticker</label>

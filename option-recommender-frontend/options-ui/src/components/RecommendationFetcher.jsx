@@ -1,36 +1,47 @@
-import React, { useState, useEffect } from "react"; // <--- Import useEffect
+import React, { useState, useEffect, useRef } from "react";
 
 const javaUrl = import.meta.env.VITE_BACKEND_URL;
 
 function RecommendationFetcher({ ticker, strategy, expiries, strikes }) {
-  // Initialize with empty string, as the actual default will be set by useEffect
   const [selectedExpiry, setSelectedExpiry] = useState("");
   const [selectedStrike, setSelectedStrike] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // This useEffect will run whenever 'expiries' or 'strikes' props change
+  const prevTicker = useRef();
+  const prevStrategy = useRef();
+
   useEffect(() => {
-    console.log("useEffect ran for RecommendationFetcher with new expiries/strikes");
-    // Update selectedExpiry if expiries array has elements
+    // Only run effect if ticker or strategy actually changed
+    if (prevTicker.current === ticker && prevStrategy.current === strategy) return;
+
+    prevTicker.current = ticker;
+    prevStrategy.current = strategy;
+
+    const startTime = Date.now();
+    setLoading(true);
+
     if (expiries && expiries.length > 0) {
       setSelectedExpiry(expiries[0]);
     } else {
-      setSelectedExpiry(""); // Clear if expiries become empty
+      setSelectedExpiry("");
     }
 
-    // Update selectedStrike if strikes array has elements
     if (strikes && strikes.length > 0) {
       setSelectedStrike(strikes[0]);
     } else {
-      setSelectedStrike(""); // Clear if strikes become empty
+      setSelectedStrike("");
     }
 
-    // Also a good idea to clear the previous recommendation message
     setMessage("");
 
-  }, [expiries, strikes]); // Dependency array: tells useEffect to re-run when these values change
+    const elapsed = Date.now() - startTime;
+    const remaining = 1000 - elapsed;
+    setTimeout(() => setLoading(false), remaining > 0 ? remaining : 0);
+  }, [ticker, strategy]);
 
   const handleSubmit = async () => {
+
     try {
       const response = await fetch(`${javaUrl}/recommend`, {
         method: "POST",
@@ -46,7 +57,7 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes }) {
       });
 
       if (!response.ok) {
-        const errorText = await response.text(); // Get more specific error from response body
+        const errorText = await response.text();
         throw new Error(`HTTP error! status: ${response.status}. Message: ${errorText}`);
       }
 
@@ -60,11 +71,16 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes }) {
 
   return (
     <div>
-      <h4>Step 2: Choose Expiry & Strike</h4>
+      <h4>Choose Expiry & Strike</h4>
       <p><strong>Ticker:</strong> {ticker} &nbsp;&nbsp; <strong>Strategy:</strong> {strategy}</p>
 
-      {/* Check if expiries/strikes are available before rendering selects */}
-      {expiries && expiries.length > 0 && strikes && strikes.length > 0 ? (
+      {loading ? (
+        <div className="d-flex justify-content-center align-items-center" style={{ height: "300px" }}>
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      ) : expiries && expiries.length > 0 && strikes && strikes.length > 0 ? (
         <>
           <div className="mb-3">
             <label className="form-label">Select Expiry</label>
@@ -103,8 +119,11 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes }) {
         </div>
       )}
 
-
-      {message && <div className="text-wrap overflow-auto alert alert-info mt-3"><pre>{message}</pre></div>}
+      {message && (
+        <div className="text-wrap overflow-auto alert alert-info mt-3">
+          <pre>{message}</pre>
+        </div>
+      )}
     </div>
   );
 }
