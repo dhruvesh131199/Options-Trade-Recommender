@@ -109,4 +109,6 @@ def getCandles(ticker: str):
 
     return candles
 
-print(getCandles("AAPL"))
+@app.get("/ping")
+def ping():
+    return {"status": "ok"}

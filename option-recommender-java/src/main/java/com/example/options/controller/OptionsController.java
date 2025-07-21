@@ -51,6 +51,11 @@ public class OptionsController {
         return "Welcome to the Options Recommender API!";
     }
 
+    @GetMapping("/ping")
+    public String ping() {
+        return "Spring boot backend is up";
+    }
+
     @PostMapping("/candles")
     public List<CandleResponse> candles(@RequestBody String ticker){
         return mdc.getCandles(ticker);
