@@ -4,7 +4,7 @@ import axios from "axios";
 const javaUrl = import.meta.env.VITE_BACKEND_URL;
 
 const tickers = ["AAPL", "MSFT", "GOOG", "NVDA", "TSLA", "AMZN"];
-const strategies = ["covered call", "protective put"];
+const strategies = ["Ratio Call Spread", "Ratio Put Spread"];
 
 function ExpiryStrikeFetcher({ onDataFetched }) {
   const [ticker, setTicker] = useState(tickers[0]);
@@ -23,6 +23,7 @@ function ExpiryStrikeFetcher({ onDataFetched }) {
         strategy,
         expiries: response.data.expiries,
         strikes: response.data.strikes,
+        weeklyVol: response.data.weeklyVol
       });
       setError(null);
     } catch (err) {

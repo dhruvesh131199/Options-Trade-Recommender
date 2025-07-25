@@ -65,7 +65,6 @@ def get_expiries_and_strikes(ticker: str, strategy: str):
         
         #We only return options with expiries less than 14 days
         expiries= [datetime.strptime(d, "%Y-%m-%d") for d in expiries]
-        today = datetime.today()
         expiries = [d.strftime("%Y-%m-%d") for d in expiries]
         expiries = expiries[:4]
 
@@ -74,15 +73,48 @@ def get_expiries_and_strikes(ticker: str, strategy: str):
         for expiry in expiries:
             option_chain = stock.option_chain(expiry)
             ##handle calls
-            if strategy.lower() == "covered call":
-                all_strikes.update(option_chain.calls[option_chain.calls["inTheMoney"] == False]['strike'].tolist())
+            if strategy.lower() == "ratio call spread":
+                strikes = option_chain.calls[option_chain.calls["inTheMoney"] == False]['strike'].tolist()
+                all_strikes.update(strikes)
+                sorted_strikes = sorted(all_strikes)
             
-            if strategy.lower() == "protective put":
-                all_strikes.update(option_chain.puts[option_chain.puts["inTheMoney"] == False]['strike'].tolist())
+            if strategy.lower() == "ratio put spread":
+                strikes = option_chain.puts[option_chain.puts["inTheMoney"] == False]['strike'].tolist()
+                all_strikes.update(strikes)
+                sorted_strikes = sorted(all_strikes, reverse = True)
+
+        ####Calculating weekly volatilities
+
+        df = yf.download(ticker, period="60d", interval="1d")
+        df.columns = [col[0] for col in df.columns]
+        df = df[['Open', 'High', 'Low']].dropna()
+        df["start_date"] = df.index
+        df["end_date"] = df.index
+
+        # Resample weekly (ending Sunday)
+        weekly = df.resample('W').agg({
+            'Open': 'first',
+            'High': 'max',
+            'Low': 'min',
+            'start_date': 'min',
+            'end_date': 'max'
+        })
+
+        weekly['trading_days'] = df.resample('W').size()
+        weekly = weekly[weekly['trading_days'] >= 4]
+        weekly['percent_range'] = (weekly['High'] - weekly['Low']) / weekly['Open'] * 100
+
+        weekly_vol = []
+
+        for _, row in weekly.tail(4).iterrows():
+            start = row["start_date"].strftime("%d %b %Y")
+            end = row["end_date"].strftime("%d %b %Y")
+            weekly_vol.append(f"{start} - {end}: {row['percent_range']:.2f}%")
 
         return {
             "expiries": expiries,
-            "strikes": sorted(all_strikes)
+            "strikes": sorted_strikes,
+            "weeklyVol": weekly_vol
         }
     
     except Exception as e:

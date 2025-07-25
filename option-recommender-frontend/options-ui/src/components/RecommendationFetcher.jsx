@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 
 const javaUrl = import.meta.env.VITE_BACKEND_URL;
+const risks = ["Low", "Medium", "High"];
 
-function RecommendationFetcher({ ticker, strategy, expiries, strikes }) {
+function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol }) {
   const [selectedExpiry, setSelectedExpiry] = useState("");
   const [selectedStrike, setSelectedStrike] = useState("");
+  const [risk, setRisk] = useState(risks[0]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -105,6 +107,27 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes }) {
             >
               {strikes.map((strike, i) => (
                 <option key={i} value={strike}>{strike}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Past Weekly Volatility Info */}
+          {weeklyVol && weeklyVol.length > 0 && (
+            <div className="mb-3">
+              <label className="form-label text-muted" style={{ fontSize: "0.8rem" }}>Past 4 Week Volatilities</label>
+              <ul className="list-unstyled" style={{ fontStyle: "italic", fontSize: "0.7rem", color: "#555" }}>
+                {weeklyVol.map((entry, index) => (
+                  <li key={index}>• {entry}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="mb-3">
+            <label className="form-label">Select Risk</label>
+            <select className="form-select" value={risk} onChange={(e) => setRisk(e.target.value)}>
+              {risks.map((i) => (
+                <option key={i} value={i}>{i}</option>
               ))}
             </select>
           </div>
