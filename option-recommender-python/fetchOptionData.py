@@ -62,6 +62,7 @@ def get_expiries_and_strikes(ticker: str, strategy: str):
     try:
         stock = yf.Ticker(ticker)
         expiries = stock.options
+        ltp = stock.fast_info['last_price']
         
         #We only return options with expiries less than 14 days
         expiries= [datetime.strptime(d, "%Y-%m-%d") for d in expiries]
@@ -82,6 +83,9 @@ def get_expiries_and_strikes(ticker: str, strategy: str):
                 strikes = option_chain.puts[option_chain.puts["inTheMoney"] == False]['strike'].tolist()
                 all_strikes.update(strikes)
                 sorted_strikes = sorted(all_strikes, reverse = True)
+        
+        for i in range(len(sorted_strikes)):
+            sorted_strikes[i] = str(sorted_strikes[i]) +" | " + str(round(((abs(sorted_strikes[i] - ltp)*100)/ltp),2)) + "% away"
 
         ####Calculating weekly volatilities
 

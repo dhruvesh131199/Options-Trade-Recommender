@@ -54,9 +54,12 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol 
           ticker,
           strategy,
           expiry: selectedExpiry,
-          strike: selectedStrike,
+          strikeWithHowFar: selectedStrike,
+          risk: risk
         }),
       });
+
+      console.log("Server Response:", response.body);
 
       if (!response.ok) {
         const errorText = await response.text();
