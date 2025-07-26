@@ -23,28 +23,6 @@ public class OptionsService {
         return marketDataClient.getExpiryStrike(request.getTicker(), request.getStrategy());
     }
 
-    public List<RecommendationResult> getRecommendations(RecommendationRequest request){
-        List<Option> options = marketDataClient.getOptionsForTicker(request.getTicker());
-
-        List<RecommendationResult> recommendations = new ArrayList<>();
-
-        // for (Option option: options){
-        //     recommendations.add(
-        //         new RecommendationResult(option, "test"));
-        // }
-        // return recommendations;
-
-        for(Option option: options){
-            if (matchesRisk(option, request.getRiskLevel()) && matchesStrategy(option, request.getStrategy())){
-                recommendations.add(
-                    new RecommendationResult(option, "Matches risk level: "+request.getRiskLevel()+" and strategy: "+request.getStrategy())
-                );
-            }
-        }
-
-        return recommendations;
-    }
-
 
     //Filters out options based on risk and roi
     public boolean matchesRisk(Option option, String riskLevel){
