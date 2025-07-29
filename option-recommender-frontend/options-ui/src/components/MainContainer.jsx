@@ -4,6 +4,7 @@ import ExpiryStrikeFetcher from "./ExpiryStrikeFetcher";
 import RecommendationFetcher from "./RecommendationFetcher";
 import ChartFetcher from "./ChartFetcher";
 import Recommendation from "./Recommendation";
+import OptionPayoffChart from "./OptionPayoffChart";
 //import { ErrorBoundary } from "./ErrorBoundary";
 
 function MainContainer() {
@@ -53,6 +54,16 @@ function MainContainer() {
               <div className="card shadow-sm">
                 <div className="card-body">
                     <Recommendation {...recommendationData} />
+                </div>
+              </div>: null}
+            </div>
+
+            <div className="col">
+              {recommendationData ? 
+              <div className="card shadow-sm">
+                <div className="card-body">
+                  <h4 className="card-title">Payoff chart</h4>
+                    <OptionPayoffChart {...recommendationData} />
                 </div>
               </div>: null}
             </div>
