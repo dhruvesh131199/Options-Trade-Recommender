@@ -1,16 +1,18 @@
 package com.example.options.client;
 
-import com.example.options.model.Option;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
 import com.example.options.model.CandleResponse;
 import com.example.options.model.ExpiryStrikeResponse;
-import org.springframework.stereotype.Component;
-
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.ResponseEntity;
-import org.springframework.beans.factory.annotation.Value;
-
-import java.util.Arrays;
-import java.util.List;
+import com.example.options.model.Option;
+import com.example.options.model.RecommendationResponse;
 
 @Component
 public class MarketDataClient{
@@ -39,6 +41,23 @@ public class MarketDataClient{
         
         ResponseEntity<CandleResponse[]> response = restTemplate.getForEntity(url, CandleResponse[].class);
         return Arrays.asList(response.getBody());
+    }
+
+    public RecommendationResponse fetchLegs(String ticker, String strategy, String expiry, double strike){
+
+        if (strategy.equalsIgnoreCase("ratio call spread")){
+            String url = python_api_url + "ratiocallspread/" + ticker.toUpperCase() + "/" + expiry + "/" + strike;
+            try {
+                ResponseEntity<RecommendationResponse> response = restTemplate.getForEntity(url, RecommendationResponse.class);
+                return response.getBody();
+            } catch (Exception e) {
+                System.err.println("Error calling: " + url);
+                e.printStackTrace(); // or use logger if you have one
+                return null;
+            }
+        }
+        
+        return null;
     }
 
     public void testfetch(String ticker, String strategy){

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 const javaUrl = import.meta.env.VITE_BACKEND_URL;
 const risks = ["Low", "Medium", "High"];
 
-function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol }) {
+function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol, onRecommendFetched }) {
   const [selectedExpiry, setSelectedExpiry] = useState("");
   const [selectedStrike, setSelectedStrike] = useState("");
   const [risk, setRisk] = useState(risks[0]);
@@ -59,15 +59,26 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol 
         }),
       });
 
-      console.log("Server Response:", response.body);
+      const data = await response.json();
 
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`HTTP error! status: ${response.status}. Message: ${errorText}`);
       }
 
-      const result = await response.json();
-      setMessage(JSON.stringify(result, null, 2));
+      onRecommendFetched({
+          ticker,
+          strategy,
+          expiry: selectedExpiry,
+          risk: risk,
+          legs: data.legs,
+          lowestStrike: data.lowestStrike,
+          highestStrike: data.highestStrike,
+          strikeWithHowFar: selectedStrike
+      });
+
+      console.log("Server Response:", data);
+
     } catch (error) {
       console.error("Fetch error:", error);
       setMessage("Failed to get recommendation, please try again later");

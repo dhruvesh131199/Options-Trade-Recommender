@@ -29,13 +29,8 @@ public class OptionsController {
     private MarketDataClient mdc;
 
     @PostMapping("/recommend")
-    public ResponseEntity<Map<String, String>> recommend(@RequestBody RecommendationRequest request) {       
-        //return optionsService.getRecommendations(request);
-        System.out.println(request.toString());
-        Map<String, String> response = new HashMap<>();
-        response.put("Object", request.toString());
-
-        return ResponseEntity.ok(response);
+    public RecommendationResponse recommend(@RequestBody RecommendationRequest request) {       
+        return optionsService.getRecommendations(request); 
     }
 
     @PostMapping("/expiries_and_strikes")

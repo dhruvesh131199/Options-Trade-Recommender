@@ -3,10 +3,13 @@ import React, { useState } from "react";
 import ExpiryStrikeFetcher from "./ExpiryStrikeFetcher";
 import RecommendationFetcher from "./RecommendationFetcher";
 import ChartFetcher from "./ChartFetcher";
+import Recommendation from "./Recommendation";
 //import { ErrorBoundary } from "./ErrorBoundary";
 
 function MainContainer() {
   const [optionData, setOptionData] = useState(null);
+  const [recommendationData, setRecommendationData] = useState(null);
+
 
   return (
     <main>
@@ -16,10 +19,11 @@ function MainContainer() {
       <div className="album py-5 bg-body-tertiary">
         <div className="container">
           <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+
             <div className="col">
               <div className="card shadow-sm">
                 <div className="card-body">
-                    <ExpiryStrikeFetcher onDataFetched={setOptionData} />
+                    <ExpiryStrikeFetcher onDataFetched={setOptionData} onResetRecommendation={() => setRecommendationData(null)}/>
                 </div>
               </div>
             </div>
@@ -37,7 +41,18 @@ function MainContainer() {
               {optionData ? 
               <div className="card shadow-sm">
                 <div className="card-body">
-                    <RecommendationFetcher {...optionData} />
+                    <RecommendationFetcher {...optionData} onRecommendFetched={setRecommendationData}/>
+                </div>
+              </div>: null}
+            </div>
+          </div>
+
+          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-2 g-3 mt-1">
+            <div className="col">
+              {recommendationData ? 
+              <div className="card shadow-sm">
+                <div className="card-body">
+                    <Recommendation {...recommendationData} />
                 </div>
               </div>: null}
             </div>

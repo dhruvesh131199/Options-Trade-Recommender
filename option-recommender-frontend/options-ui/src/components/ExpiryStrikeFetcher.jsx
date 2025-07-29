@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import axios from "axios";
 
 const javaUrl = import.meta.env.VITE_BACKEND_URL;
@@ -6,12 +6,19 @@ const javaUrl = import.meta.env.VITE_BACKEND_URL;
 const tickers = ["AAPL", "MSFT", "GOOG", "NVDA", "TSLA", "AMZN"];
 const strategies = ["Ratio Call Spread", "Ratio Put Spread"];
 
-function ExpiryStrikeFetcher({ onDataFetched }) {
+function ExpiryStrikeFetcher({ onDataFetched,  onResetRecommendation}) {
+  const lastFetched = useRef({ ticker: null, strategy: null });
   const [ticker, setTicker] = useState(tickers[0]);
   const [strategy, setStrategy] = useState(strategies[0]);
   const [error, setError] = useState(null);
 
   const fetchExpiryStrike = async () => {
+    const hasChanged = ticker !== lastFetched.current.ticker || strategy !== lastFetched.current.strategy;
+
+    if (hasChanged && onResetRecommendation) {
+      onResetRecommendation();
+    }
+
     try {
       const response = await axios.post(`${javaUrl}/expiries_and_strikes`, {
         ticker,
@@ -25,6 +32,7 @@ function ExpiryStrikeFetcher({ onDataFetched }) {
         strikes: response.data.strikes,
         weeklyVol: response.data.weeklyVol
       });
+      lastFetched.current = { ticker, strategy };
       setError(null);
     } catch (err) {
       console.error(err);

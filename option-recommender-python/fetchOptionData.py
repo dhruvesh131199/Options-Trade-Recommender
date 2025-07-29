@@ -145,6 +145,46 @@ def getCandles(ticker: str):
 
     return candles
 
+
+"""
+This function is used to fetch option legs for the ratio call spread strategy
+We return two option legs, one for buy and one for sell
+Buy leg with the ask price as premium(because we buy at ask price) and three strike price lesser than the sellLeg
+Sell leg with the bid price as premium(because we sell at the bid price) and strike price is provided by the user which he thinks stock won't cross
+Lot size is returned as 1, but the actual calculation will be handled in the spring boot.
+"""
+@app.get("/ratiocallspread/{ticker}/{expiry}/{strike}")
+def fetchLegs(ticker: str, expiry: str, strike: float):
+    stock = yf.Ticker(ticker)
+    calls = stock.option_chain(expiry).calls
+    calls = calls[["strike", "bid", "ask", "lastPrice"]]
+    calls["lots"] = 1
+    
+    sellLegIndex = calls[calls["strike"] == strike].index
+    buyLegIndex = sellLegIndex - 3
+    
+    sellLeg = calls.iloc[sellLegIndex, :].copy()
+    buyLeg = calls.iloc[buyLegIndex, :].copy()
+
+    sellLeg["premium"] = sellLeg["bid"].fillna(sellLeg["lastPrice"]).astype(float)
+    sellLeg["buySell"] = "sell"
+    sellLeg.drop(['ask', 'bid', 'lastPrice'], axis=1, inplace=True)
+
+    buyLeg["premium"] = buyLeg["ask"].fillna(buyLeg["lastPrice"]).astype(float)
+    buyLeg["buySell"] = "buy"
+    buyLeg.drop(['ask', 'bid', 'lastPrice'], axis=1, inplace=True)
+    
+    sell_leg = sellLeg.to_dict(orient='records')[0]
+    buy_leg = buyLeg.to_dict(orient='records')[0]
+    
+    return {
+        "legs": [sell_leg, buy_leg],
+        "lowestStrike": float(buyLeg["strike"]),
+        "highestStrike": float(sellLeg["strike"])
+    }
+
 @app.get("/ping")
 def ping():
     return {"status": "ok"}
+
+fetchLegs("AAPL", "2025-08-01", 230)
