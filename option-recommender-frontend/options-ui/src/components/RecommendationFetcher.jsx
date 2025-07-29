@@ -77,7 +77,6 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
       });
 
       console.log("Server Response:", data);
-      setMessage = useState("");
 
     } catch (error) {
       console.error("Fetch error:", error);
