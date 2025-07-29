@@ -59,12 +59,11 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}. Message: ${errorText}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
 
       onRecommendFetched({
           ticker,
@@ -78,6 +77,7 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
       });
 
       console.log("Server Response:", data);
+      setMessage = useState("");
 
     } catch (error) {
       console.error("Fetch error:", error);

@@ -11,6 +11,7 @@ import com.example.options.model.ExpiryStrikeResponse;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +59,10 @@ public class OptionsService {
 
         double buyPremium = buyLeg.getPremium();
         double sellPremium = sellLeg.getPremium();
+
+        if (buyPremium == 0.0 || sellPremium == 0.0) {
+            return Collections.emptyList();
+        }
 
         double sellLotSize = 1;
 

@@ -157,7 +157,8 @@ Lot size is returned as 1, but the actual calculation will be handled in the spr
 def fetchLegs(ticker: str, expiry: str, strike: float):
     stock = yf.Ticker(ticker)
     calls = stock.option_chain(expiry).calls
-    calls = calls[["strike", "bid", "ask", "lastPrice"]]
+    calls["type"] = "call"
+    calls = calls[["strike", "bid", "ask", "lastPrice", "type"]]
     calls["lots"] = 1
     
     sellLegIndex = calls[calls["strike"] == strike].index
