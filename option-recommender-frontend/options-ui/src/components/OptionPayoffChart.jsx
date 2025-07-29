@@ -73,16 +73,16 @@ const OptionPayoffChart = ({ legs, ticker, expiry, strategy, risk, strikeWithHow
 
   return (
     <LineChart
-      width={500}
-      height={300}
+      width={700}
+      height={450}
       data={chartData}
       margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
     >
       <CartesianGrid strokeDasharray="1 1" />
-      <XAxis dataKey="stockPrice" label={{ value: 'Stock price', position: 'insideBottom', dy: 25 }}/>
+      <XAxis dataKey="stockPrice" label={{ value: 'Stock price', position: 'bottom', dy: 20 }}/>
       <YAxis label={{ value: 'Payoff', position: 'insideLeft', angle: -90 }}/>
       <Tooltip />
-      <Legend />
+      <Legend verticalAlign="top" align="right"/>
       <ReferenceLine y={0} stroke="blue" strokeWidth={1} strokeDasharray="0" />
       <ReferenceLine x={lowestStrike} stroke="red" strokeWidth={1} strokeDasharray="0" />
       <ReferenceLine x={highestStrike} stroke="red" strokeWidth={1} strokeDasharray="0" />
