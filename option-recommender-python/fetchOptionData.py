@@ -187,5 +187,3 @@ def fetchLegs(ticker: str, expiry: str, strike: float):
 @app.get("/ping")
 def ping():
     return {"status": "ok"}
-
-fetchLegs("AAPL", "2025-08-01", 230)
