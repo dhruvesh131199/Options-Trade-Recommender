@@ -4,7 +4,7 @@ import axios from "axios";
 const javaUrl = import.meta.env.VITE_BACKEND_URL;
 
 const tickers = ["AAPL", "MSFT", "GOOG", "NVDA", "TSLA", "AMZN"];
-const strategies = ["Ratio Call Spread", "Ratio Put Spread"];
+const strategies = ["Ratio Call Spread"];
 
 function ExpiryStrikeFetcher({ onDataFetched,  onResetRecommendation}) {
   const lastFetched = useRef({ ticker: null, strategy: null });

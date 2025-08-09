@@ -65,6 +65,8 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
 
       const data = await response.json();
 
+      setMessage("");
+
       onRecommendFetched({
           ticker,
           strategy,
