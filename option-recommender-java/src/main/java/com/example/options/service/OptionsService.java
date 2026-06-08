@@ -39,6 +39,10 @@ public class OptionsService {
 
         RecommendationResponse response = marketDataClient.fetchLegs(ticker, strategy, expiry, strike);
 
+        if (response == null || response.getLegs() == null || response.getLegs().isEmpty()) {
+            return new RecommendationResponse(Collections.emptyList(), 0, 0);
+        }
+
         //Modify lot size for ratio call spread strategy with strategy
         if (strategy.equalsIgnoreCase("ratio call spread")){
             response.setLegs(getRatioCallSpread(response.getLegs(), risk));

@@ -14,7 +14,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-@app.get("options/{ticker}")
+@app.get("/options/{ticker}")
 def get_options(ticker: str):
     try:
         stock = yf.Ticker(ticker)
@@ -155,34 +155,54 @@ Lot size is returned as 1, but the actual calculation will be handled in the spr
 """
 @app.get("/ratiocallspread/{ticker}/{expiry}/{strike}")
 def fetchLegs(ticker: str, expiry: str, strike: float):
-    stock = yf.Ticker(ticker)
-    calls = stock.option_chain(expiry).calls
-    calls["type"] = "call"
-    calls = calls[["strike", "bid", "ask", "lastPrice", "type"]]
-    calls["lots"] = 1
-    
-    sellLegIndex = calls[calls["strike"] == strike].index
-    buyLegIndex = sellLegIndex - 3
-    
-    sellLeg = calls.iloc[sellLegIndex, :].copy()
-    buyLeg = calls.iloc[buyLegIndex, :].copy()
+    try:
+        stock = yf.Ticker(ticker)
+        calls = stock.option_chain(expiry).calls
+        calls["type"] = "call"
+        calls = calls[["strike", "bid", "ask", "lastPrice", "type"]].copy()
+        calls["lots"] = 1
+        calls = calls.reset_index(drop=True)
 
-    sellLeg["premium"] = sellLeg["bid"].fillna(sellLeg["lastPrice"]).astype(float)
-    sellLeg["buySell"] = "sell"
-    sellLeg.drop(['ask', 'bid', 'lastPrice'], axis=1, inplace=True)
+        sell_matches = calls[calls["strike"] == strike]
+        if sell_matches.empty:
+            return {"error": f"Strike {strike} not found for expiry {expiry}"}
 
-    buyLeg["premium"] = buyLeg["ask"].fillna(buyLeg["lastPrice"]).astype(float)
-    buyLeg["buySell"] = "buy"
-    buyLeg.drop(['ask', 'bid', 'lastPrice'], axis=1, inplace=True)
-    
-    sell_leg = sellLeg.to_dict(orient='records')[0]
-    buy_leg = buyLeg.to_dict(orient='records')[0]
-    
-    return {
-        "legs": [sell_leg, buy_leg],
-        "lowestStrike": float(buyLeg["strike"]),
-        "highestStrike": float(sellLeg["strike"])
-    }
+        sell_leg_idx = int(sell_matches.index[0])
+        buy_leg_idx = sell_leg_idx - 3
+        if buy_leg_idx < 0:
+            return {"error": "Not enough lower strikes for ratio call spread (need 3 below sell strike)"}
+
+        sellLeg = calls.iloc[sell_leg_idx].copy()
+        buyLeg = calls.iloc[buy_leg_idx].copy()
+
+        sellLeg["premium"] = float(sellLeg["bid"] if pd.notna(sellLeg["bid"]) else sellLeg["lastPrice"])
+        sellLeg["buySell"] = "sell"
+
+        buyLeg["premium"] = float(buyLeg["ask"] if pd.notna(buyLeg["ask"]) else buyLeg["lastPrice"])
+        buyLeg["buySell"] = "buy"
+
+        sell_leg = {
+            "strike": float(sellLeg["strike"]),
+            "premium": sellLeg["premium"],
+            "buySell": sellLeg["buySell"],
+            "lots": float(sellLeg["lots"]),
+            "type": sellLeg["type"],
+        }
+        buy_leg = {
+            "strike": float(buyLeg["strike"]),
+            "premium": buyLeg["premium"],
+            "buySell": buyLeg["buySell"],
+            "lots": float(buyLeg["lots"]),
+            "type": buyLeg["type"],
+        }
+
+        return {
+            "legs": [sell_leg, buy_leg],
+            "lowestStrike": buy_leg["strike"],
+            "highestStrike": sell_leg["strike"],
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/ping")
 def ping():

@@ -19,8 +19,6 @@ services:
       # Set PORT environment variable for Python app if it's designed to read it
       # This is crucial for cloud deployments but good to have for consistency
       - PORT=8000
-    depends_on:
-      - java-backend # Ensure Java backend is up before starting Python (if they interact)
 
   # --- Java Spring Boot Backend Service ---
   java-backend:
@@ -30,8 +28,10 @@ services:
     ports:
       - "8080:8080" # Map host port 8080 to container port 8080 (Spring Boot's internal port)
     environment:
-      # Set PORT environment variable for Java app if it's designed to read it
       - PORT=8080
+      - PYTHON_API_URL=http://python-api:8000/
+    depends_on:
+      - python-api
 
   # --- React/Vite Frontend Service ---
   frontend:
