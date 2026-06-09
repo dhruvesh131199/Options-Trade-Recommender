@@ -8,20 +8,16 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
   const [selectedStrike, setSelectedStrike] = useState("");
   const [risk, setRisk] = useState(risks[0]);
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const prevTicker = useRef();
   const prevStrategy = useRef();
 
   useEffect(() => {
-    // Only run effect if ticker or strategy actually changed
     if (prevTicker.current === ticker && prevStrategy.current === strategy) return;
 
     prevTicker.current = ticker;
     prevStrategy.current = strategy;
-
-    const startTime = Date.now();
-    setLoading(true);
 
     if (expiries && expiries.length > 0) {
       setSelectedExpiry(expiries[0]);
@@ -36,13 +32,11 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
     }
 
     setMessage("");
-
-    const elapsed = Date.now() - startTime;
-    const remaining = 1000 - elapsed;
-    setTimeout(() => setLoading(false), remaining > 0 ? remaining : 0);
-  }, [ticker, strategy]);
+  }, [ticker, strategy, expiries, strikes]);
 
   const handleSubmit = async () => {
+    setSubmitting(true);
+    setMessage("");
 
     try {
       const response = await fetch(`${javaUrl}/recommend`, {
@@ -83,6 +77,8 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
     } catch (error) {
       console.error("Fetch error:", error);
       setMessage("Failed to get recommendation, please try again later");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -91,13 +87,7 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
       <h4>Choose Expiry & Strike</h4>
       <p><strong>Ticker:</strong> {ticker} &nbsp;&nbsp; <strong>Strategy:</strong> {strategy}</p>
 
-      {loading ? (
-        <div className="d-flex justify-content-center align-items-center" style={{ height: "300px" }}>
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      ) : expiries && expiries.length > 0 && strikes && strikes.length > 0 ? (
+      {expiries && expiries.length > 0 && strikes && strikes.length > 0 ? (
         <>
           <div className="mb-3">
             <label className="form-label">Select Expiry</label>
@@ -147,8 +137,15 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
             </select>
           </div>
 
-          <button className="btn btn-success" onClick={handleSubmit}>
-            Submit for Recommendation
+          <button className="btn btn-success" onClick={handleSubmit} disabled={submitting}>
+            {submitting ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                Getting recommendation...
+              </>
+            ) : (
+              "Submit for Recommendation"
+            )}
           </button>
         </>
       ) : (

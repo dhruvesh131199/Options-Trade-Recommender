@@ -13,7 +13,6 @@ function ChartFetcher({ ticker }) {
 
     const fetchCandles = async () => {
       setLoading(true);
-      const startTime = Date.now();
 
       try {
         const res = await fetch(`${javaUrl}/candles`, {
@@ -30,9 +29,7 @@ function ChartFetcher({ ticker }) {
         console.error("Failed to fetch candle data:", err);
         setError("Error loading chart");
       } finally {
-        const elapsed = Date.now() - startTime;
-        const remaining = 1000 - elapsed;
-        setTimeout(() => setLoading(false), remaining > 0 ? remaining : 0);
+        setLoading(false);
       }
     };
 
@@ -45,10 +42,11 @@ function ChartFetcher({ ticker }) {
     <div>
       <h5 className="card-title">{ticker} Candlestick Chart</h5>
       {loading ? (
-        <div className="d-flex justify-content-center align-items-center" style={{ height: "300px" }}>
-          <div className="spinner-border text-primary" role="status">
+        <div className="d-flex flex-column justify-content-center align-items-center text-center" style={{ height: "300px" }}>
+          <div className="spinner-border text-primary mb-3" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
+          <p className="text-muted small mb-0">Loading chart data...</p>
         </div>
       ) : error ? (
         <div className="text-danger">{error}</div>

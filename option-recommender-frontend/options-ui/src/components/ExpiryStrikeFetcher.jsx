@@ -6,11 +6,12 @@ const javaUrl = import.meta.env.VITE_BACKEND_URL;
 const tickers = ["AAPL", "MSFT", "GOOG", "NVDA", "TSLA", "AMZN"];
 const strategies = ["Ratio Call Spread"];
 
-function ExpiryStrikeFetcher({ onDataFetched,  onResetRecommendation}) {
+function ExpiryStrikeFetcher({ onDataFetched, onResetRecommendation, onFetchStart, onFetchEnd }) {
   const lastFetched = useRef({ ticker: null, strategy: null });
   const [ticker, setTicker] = useState(tickers[0]);
   const [strategy, setStrategy] = useState(strategies[0]);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const fetchExpiryStrike = async () => {
     const hasChanged = ticker !== lastFetched.current.ticker || strategy !== lastFetched.current.strategy;
@@ -19,11 +20,14 @@ function ExpiryStrikeFetcher({ onDataFetched,  onResetRecommendation}) {
       onResetRecommendation();
     }
 
+    setLoading(true);
+    onFetchStart?.();
+
     try {
       const response = await axios.post(`${javaUrl}/expiries_and_strikes`, {
         ticker,
         strategy,
-      });
+      }, { timeout: 90000 });
 
       onDataFetched({
         ticker,
@@ -36,7 +40,10 @@ function ExpiryStrikeFetcher({ onDataFetched,  onResetRecommendation}) {
       setError(null);
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch data");
+      setError("Failed to fetch data. The server may still be waking up — try again in a moment.");
+    } finally {
+      setLoading(false);
+      onFetchEnd?.();
     }
   };
 
@@ -62,8 +69,15 @@ function ExpiryStrikeFetcher({ onDataFetched,  onResetRecommendation}) {
         </select>
       </div>
 
-      <button className="btn btn-primary" onClick={fetchExpiryStrike}>
-        Fetch Expiries & Strikes
+      <button className="btn btn-primary" onClick={fetchExpiryStrike} disabled={loading}>
+        {loading ? (
+          <>
+            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+            Fetching...
+          </>
+        ) : (
+          "Fetch Expiries & Strikes"
+        )}
       </button>
 
       {error && <div className="alert alert-danger mt-3">{error}</div>}

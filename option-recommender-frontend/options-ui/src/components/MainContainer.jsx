@@ -5,11 +5,13 @@ import RecommendationFetcher from "./RecommendationFetcher";
 import ChartFetcher from "./ChartFetcher";
 import Recommendation from "./Recommendation";
 import OptionPayoffChart from "./OptionPayoffChart";
+import LoadingCard from "./LoadingCard";
 //import { ErrorBoundary } from "./ErrorBoundary";
 
 function MainContainer() {
   const [optionData, setOptionData] = useState(null);
   const [recommendationData, setRecommendationData] = useState(null);
+  const [isFetchingExpiries, setIsFetchingExpiries] = useState(false);
 
 
   return (
@@ -24,27 +26,44 @@ function MainContainer() {
             <div className="col">
               <div className="card shadow-sm">
                 <div className="card-body">
-                    <ExpiryStrikeFetcher onDataFetched={setOptionData} onResetRecommendation={() => setRecommendationData(null)}/>
+                    <ExpiryStrikeFetcher
+                      onDataFetched={setOptionData}
+                      onResetRecommendation={() => setRecommendationData(null)}
+                      onFetchStart={() => setIsFetchingExpiries(true)}
+                      onFetchEnd={() => setIsFetchingExpiries(false)}
+                    />
                 </div>
               </div>
             </div>
 
             <div className="col">
-                {optionData ? 
-                  <div className="card shadow-sm">
-                    <div className="card-body">
-                      <ChartFetcher ticker={optionData.ticker} />
-                    </div>
-                  </div>: null}
+              {isFetchingExpiries ? (
+                <LoadingCard
+                  title="Candlestick Chart"
+                  message="Fetching market data. This can take up to a minute on first load."
+                />
+              ) : optionData ? (
+                <div className="card shadow-sm">
+                  <div className="card-body">
+                    <ChartFetcher ticker={optionData.ticker} />
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="col">
-              {optionData ? 
-              <div className="card shadow-sm">
-                <div className="card-body">
-                    <RecommendationFetcher {...optionData} onRecommendFetched={setRecommendationData}/>
+              {isFetchingExpiries ? (
+                <LoadingCard
+                  title="Choose Expiry & Strike"
+                  message="Loading expiries and strikes..."
+                />
+              ) : optionData ? (
+                <div className="card shadow-sm">
+                  <div className="card-body">
+                    <RecommendationFetcher {...optionData} onRecommendFetched={setRecommendationData} />
+                  </div>
                 </div>
-              </div>: null}
+              ) : null}
             </div>
           </div>
 
