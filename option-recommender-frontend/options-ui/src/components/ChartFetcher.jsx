@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import CandleChart from "./CandleChart";
-import { normalizeApiError } from "../utils/apiErrors";
+import { normalizeApiError, getCacheNotice } from "../utils/apiErrors";
 
 const javaUrl = import.meta.env.VITE_BACKEND_URL;
 
-function ChartFetcher({ ticker, onLoadingChange }) {
+function ChartFetcher({ ticker, onLoadingChange, onCacheNotice }) {
   const [candles, setCandles] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -33,6 +33,10 @@ function ChartFetcher({ ticker, onLoadingChange }) {
         }
 
         setCandles(Array.isArray(data) ? data : data.candles ?? []);
+        const notice = getCacheNotice(data);
+        if (notice) {
+          onCacheNotice?.(notice);
+        }
         setError(null);
       } catch (err) {
         console.error("Failed to fetch candle data:", err);

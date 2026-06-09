@@ -7,6 +7,8 @@ public class ExpiryStrikeResponse{
     private List<String> strikes;
     private List<String> weeklyVol;
     private String error;
+    private boolean fromCache;
+    private String cacheNotice;
 
     //REQUIRED: No-arg constructor for Jackson
     public ExpiryStrikeResponse() {
@@ -28,4 +30,10 @@ public class ExpiryStrikeResponse{
 
     public String getError() {return this.error;}
     public void setError(String error) {this.error = error;}
+
+    public boolean isFromCache() {return this.fromCache;}
+    public void setFromCache(boolean fromCache) {this.fromCache = fromCache;}
+
+    public String getCacheNotice() {return this.cacheNotice;}
+    public void setCacheNotice(String cacheNotice) {this.cacheNotice = cacheNotice;}
 }

@@ -1,0 +1,20 @@
+{
+  "legs": [
+    {
+      "strike": 435.0,
+      "premium": 0.06,
+      "buySell": "sell",
+      "lots": 1.0,
+      "type": "call"
+    },
+    {
+      "strike": 427.5,
+      "premium": 0.21,
+      "buySell": "buy",
+      "lots": 1.0,
+      "type": "call"
+    }
+  ],
+  "lowestStrike": 427.5,
+  "highestStrike": 435.0
+}

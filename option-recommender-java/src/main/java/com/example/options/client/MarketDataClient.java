@@ -76,6 +76,17 @@ public class MarketDataClient{
                 result.setError(readError(node));
                 return result;
             }
+            if (node.isObject() && node.has("candles")) {
+                CandleResponse[] candles = objectMapper.treeToValue(node.get("candles"), CandleResponse[].class);
+                result.setCandles(Arrays.asList(candles));
+                if (node.has("fromCache")) {
+                    result.setFromCache(node.get("fromCache").asBoolean());
+                }
+                if (node.has("cacheNotice")) {
+                    result.setCacheNotice(node.get("cacheNotice").asText());
+                }
+                return result;
+            }
             CandleResponse[] candles = objectMapper.treeToValue(node, CandleResponse[].class);
             result.setCandles(Arrays.asList(candles));
             return result;

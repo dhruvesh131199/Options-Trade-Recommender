@@ -1,10 +1,20 @@
 export const YAHOO_RATE_LIMIT_MESSAGE =
   "Yahoo Finance rate limit: too many requests. Please try again in a few minutes.";
 
+export const CACHE_NOTICE_MESSAGE =
+  "Yahoo Finance rate limit — showing cached data. Results may be slightly outdated.";
+
 export function isRateLimitMessage(message) {
   if (!message) return false;
   const lower = message.toLowerCase();
   return lower.includes("too many requests") || lower.includes("rate limit");
+}
+
+export function getCacheNotice(data) {
+  if (!data) return null;
+  if (data.cacheNotice) return data.cacheNotice;
+  if (data.fromCache) return CACHE_NOTICE_MESSAGE;
+  return null;
 }
 
 export function normalizeApiError(data, fallback = "Something went wrong. Please try again.") {

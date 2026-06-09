@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { normalizeApiError } from "../utils/apiErrors";
+import { normalizeApiError, getCacheNotice } from "../utils/apiErrors";
 
 const javaUrl = import.meta.env.VITE_BACKEND_URL;
 const risks = ["Low", "Medium", "High"];
@@ -91,7 +91,8 @@ function RecommendationFetcher({
           legs: data.legs,
           lowestStrike: data.lowestStrike,
           highestStrike: data.highestStrike,
-          strikeWithHowFar: selectedStrike
+          strikeWithHowFar: selectedStrike,
+          cacheNotice: getCacheNotice(data),
       });
 
       onSubmitComplete?.(true);

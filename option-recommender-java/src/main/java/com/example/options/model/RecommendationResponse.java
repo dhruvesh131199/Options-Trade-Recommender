@@ -10,6 +10,8 @@ public class RecommendationResponse{
     private double lowestStrike;
     private double highestStrike;
     private String error;
+    private boolean fromCache;
+    private String cacheNotice;
 
     public RecommendationResponse(){
     }
@@ -30,4 +32,10 @@ public class RecommendationResponse{
 
     public String getError() {return this.error;}
     public void setError(String error) {this.error = error;}
+
+    public boolean isFromCache() {return this.fromCache;}
+    public void setFromCache(boolean fromCache) {this.fromCache = fromCache;}
+
+    public String getCacheNotice() {return this.cacheNotice;}
+    public void setCacheNotice(String cacheNotice) {this.cacheNotice = cacheNotice;}
 }

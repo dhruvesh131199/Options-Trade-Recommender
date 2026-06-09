@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import axios from "axios";
-import { normalizeApiError } from "../utils/apiErrors";
+import { normalizeApiError, getCacheNotice } from "../utils/apiErrors";
 
 const javaUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -47,7 +47,8 @@ function ExpiryStrikeFetcher({ onDataFetched, onResetRecommendation, onFetchStar
         strategy,
         expiries: response.data.expiries,
         strikes: response.data.strikes,
-        weeklyVol: response.data.weeklyVol
+        weeklyVol: response.data.weeklyVol,
+        cacheNotice: getCacheNotice(response.data),
       });
       lastFetched.current = { ticker, strategy };
       setError(null);

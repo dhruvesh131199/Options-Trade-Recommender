@@ -6,6 +6,7 @@ import ChartFetcher from "./ChartFetcher";
 import Recommendation from "./Recommendation";
 import OptionPayoffChart from "./OptionPayoffChart";
 import LoadingCard from "./LoadingCard";
+import CacheNotice from "./CacheNotice";
 //import { ErrorBoundary } from "./ErrorBoundary";
 
 function MainContainer() {
@@ -15,6 +16,7 @@ function MainContainer() {
   const [fetchFlowActive, setFetchFlowActive] = useState(false);
   const [recommendFlowActive, setRecommendFlowActive] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
+  const [cacheNotice, setCacheNotice] = useState(null);
   const recommendCardsReady = useRef({ legs: false, payoff: false });
 
   const isBusy = fetchFlowActive || recommendFlowActive;
@@ -22,6 +24,7 @@ function MainContainer() {
   const handleFetchStart = useCallback(() => {
     setFetchFlowActive(true);
     setIsFetchingExpiries(true);
+    setCacheNotice(null);
   }, []);
 
   const handleFetchComplete = useCallback((success) => {
@@ -40,15 +43,28 @@ function MainContainer() {
   const handleDataFetched = useCallback((data) => {
     setOptionData(data);
     setFetchKey((key) => key + 1);
+    if (data.cacheNotice) {
+      setCacheNotice(data.cacheNotice);
+    }
   }, []);
 
   const handleRecommendFetched = useCallback((data) => {
     recommendCardsReady.current = { legs: false, payoff: false };
     setRecommendationData(data);
+    if (data.cacheNotice) {
+      setCacheNotice(data.cacheNotice);
+    }
   }, []);
 
   const handleSubmitStart = useCallback(() => {
     setRecommendFlowActive(true);
+    setCacheNotice(null);
+  }, []);
+
+  const handleCacheNotice = useCallback((notice) => {
+    if (notice) {
+      setCacheNotice(notice);
+    }
   }, []);
 
   const handleSubmitComplete = useCallback((success) => {
@@ -77,6 +93,11 @@ function MainContainer() {
       <div className="d-flex align-items-center justify-content-center">
         <h1 className="fw-light mt-3 mb-3">Option Strategy Recommender</h1>
       </div>
+      {cacheNotice && (
+        <div className="container mb-2">
+          <CacheNotice message={cacheNotice} />
+        </div>
+      )}
       <div className="album py-5 bg-body-tertiary">
         <div className="container">
           <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
@@ -108,6 +129,7 @@ function MainContainer() {
                       key={fetchKey}
                       ticker={optionData.ticker}
                       onLoadingChange={handleChartLoadingChange}
+                      onCacheNotice={handleCacheNotice}
                     />
                   </div>
                 </div>
