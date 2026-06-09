@@ -1,5 +1,5 @@
 // MainContainer.js
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import ExpiryStrikeFetcher from "./ExpiryStrikeFetcher";
 import RecommendationFetcher from "./RecommendationFetcher";
 import ChartFetcher from "./ChartFetcher";
@@ -12,6 +12,64 @@ function MainContainer() {
   const [optionData, setOptionData] = useState(null);
   const [recommendationData, setRecommendationData] = useState(null);
   const [isFetchingExpiries, setIsFetchingExpiries] = useState(false);
+  const [fetchFlowActive, setFetchFlowActive] = useState(false);
+  const [recommendFlowActive, setRecommendFlowActive] = useState(false);
+  const [fetchKey, setFetchKey] = useState(0);
+  const recommendCardsReady = useRef({ legs: false, payoff: false });
+
+  const isBusy = fetchFlowActive || recommendFlowActive;
+
+  const handleFetchStart = useCallback(() => {
+    setFetchFlowActive(true);
+    setIsFetchingExpiries(true);
+  }, []);
+
+  const handleFetchComplete = useCallback((success) => {
+    setIsFetchingExpiries(false);
+    if (!success) {
+      setFetchFlowActive(false);
+    }
+  }, []);
+
+  const handleChartLoadingChange = useCallback((loading) => {
+    if (!loading) {
+      setFetchFlowActive(false);
+    }
+  }, []);
+
+  const handleDataFetched = useCallback((data) => {
+    setOptionData(data);
+    setFetchKey((key) => key + 1);
+  }, []);
+
+  const handleRecommendFetched = useCallback((data) => {
+    recommendCardsReady.current = { legs: false, payoff: false };
+    setRecommendationData(data);
+  }, []);
+
+  const handleSubmitStart = useCallback(() => {
+    setRecommendFlowActive(true);
+  }, []);
+
+  const handleSubmitComplete = useCallback((success) => {
+    if (!success) {
+      setRecommendFlowActive(false);
+    }
+  }, []);
+
+  const handleLegsCardReady = useCallback(() => {
+    recommendCardsReady.current.legs = true;
+    if (recommendCardsReady.current.payoff) {
+      setRecommendFlowActive(false);
+    }
+  }, []);
+
+  const handlePayoffCardReady = useCallback(() => {
+    recommendCardsReady.current.payoff = true;
+    if (recommendCardsReady.current.legs) {
+      setRecommendFlowActive(false);
+    }
+  }, []);
 
 
   return (
@@ -27,10 +85,11 @@ function MainContainer() {
               <div className="card shadow-sm">
                 <div className="card-body">
                     <ExpiryStrikeFetcher
-                      onDataFetched={setOptionData}
+                      onDataFetched={handleDataFetched}
                       onResetRecommendation={() => setRecommendationData(null)}
-                      onFetchStart={() => setIsFetchingExpiries(true)}
-                      onFetchEnd={() => setIsFetchingExpiries(false)}
+                      onFetchStart={handleFetchStart}
+                      onFetchComplete={handleFetchComplete}
+                      actionsDisabled={isBusy}
                     />
                 </div>
               </div>
@@ -45,7 +104,11 @@ function MainContainer() {
               ) : optionData ? (
                 <div className="card shadow-sm">
                   <div className="card-body">
-                    <ChartFetcher ticker={optionData.ticker} />
+                    <ChartFetcher
+                      key={fetchKey}
+                      ticker={optionData.ticker}
+                      onLoadingChange={handleChartLoadingChange}
+                    />
                   </div>
                 </div>
               ) : null}
@@ -60,7 +123,13 @@ function MainContainer() {
               ) : optionData ? (
                 <div className="card shadow-sm">
                   <div className="card-body">
-                    <RecommendationFetcher {...optionData} onRecommendFetched={setRecommendationData} />
+                    <RecommendationFetcher
+                      {...optionData}
+                      onRecommendFetched={handleRecommendFetched}
+                      onSubmitStart={handleSubmitStart}
+                      onSubmitComplete={handleSubmitComplete}
+                      actionsDisabled={isBusy}
+                    />
                   </div>
                 </div>
               ) : null}
@@ -72,7 +141,7 @@ function MainContainer() {
               {recommendationData ? 
               <div className="card shadow-sm">
                 <div className="card-body">
-                    <Recommendation {...recommendationData} />
+                    <Recommendation {...recommendationData} onLoaded={handleLegsCardReady} />
                 </div>
               </div>: null}
             </div>
@@ -82,7 +151,7 @@ function MainContainer() {
               <div className="card shadow-sm">
                 <div className="card-body">
                   <h4 className="card-title">Payoff chart</h4>
-                    <OptionPayoffChart {...recommendationData} />
+                    <OptionPayoffChart {...recommendationData} onLoaded={handlePayoffCardReady} />
                 </div>
               </div>: null}
             </div>

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import CandleChart from "./CandleChart";
+import { normalizeApiError } from "../utils/apiErrors";
 
 const javaUrl = import.meta.env.VITE_BACKEND_URL;
 
-function ChartFetcher({ ticker }) {
+function ChartFetcher({ ticker, onLoadingChange }) {
   const [candles, setCandles] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -13,6 +14,7 @@ function ChartFetcher({ ticker }) {
 
     const fetchCandles = async () => {
       setLoading(true);
+      onLoadingChange?.(true);
 
       try {
         const res = await fetch(`${javaUrl}/candles`, {
@@ -23,13 +25,21 @@ function ChartFetcher({ ticker }) {
           body: ticker,
         });
         const data = await res.json();
-        setCandles(data);
+
+        if (data?.error) {
+          setCandles([]);
+          setError(normalizeApiError(data));
+          return;
+        }
+
+        setCandles(Array.isArray(data) ? data : data.candles ?? []);
         setError(null);
       } catch (err) {
         console.error("Failed to fetch candle data:", err);
-        setError("Error loading chart");
+        setError(normalizeApiError(null, "Error loading chart"));
       } finally {
         setLoading(false);
+        onLoadingChange?.(false);
       }
     };
 
@@ -49,7 +59,7 @@ function ChartFetcher({ ticker }) {
           <p className="text-muted small mb-0">Loading chart data...</p>
         </div>
       ) : error ? (
-        <div className="text-danger">{error}</div>
+        <div className="alert alert-danger mb-0">{error}</div>
       ) : (
         <CandleChart data={candles} />
       )}

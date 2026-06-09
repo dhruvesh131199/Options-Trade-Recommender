@@ -9,6 +9,7 @@ public class RecommendationResponse{
     private List<OptionLeg> legs;
     private double lowestStrike;
     private double highestStrike;
+    private String error;
 
     public RecommendationResponse(){
     }
@@ -26,4 +27,7 @@ public class RecommendationResponse{
     public void setLegs(List<OptionLeg> legs){this.legs = legs;}
     public void setLowestStrike(double lowestStrike){this.lowestStrike = lowestStrike;}
     public void setHighestStrike(double highestStrike){this.highestStrike = highestStrike;}
+
+    public String getError() {return this.error;}
+    public void setError(String error) {this.error = error;}
 }

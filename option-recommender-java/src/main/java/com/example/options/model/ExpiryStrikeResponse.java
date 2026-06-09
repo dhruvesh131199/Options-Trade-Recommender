@@ -6,6 +6,7 @@ public class ExpiryStrikeResponse{
     private List<String> expiries;
     private List<String> strikes;
     private List<String> weeklyVol;
+    private String error;
 
     //REQUIRED: No-arg constructor for Jackson
     public ExpiryStrikeResponse() {
@@ -24,4 +25,7 @@ public class ExpiryStrikeResponse{
     public void setExpiries(List<String> expiries){this.expiries = expiries;}
     public void setStrikes(List<String> strikes) {this.strikes = strikes;}
     public void setWeeklyVol(List<String> weeklyVol){this.weeklyVol = weeklyVol;}
+
+    public String getError() {return this.error;}
+    public void setError(String error) {this.error = error;}
 }

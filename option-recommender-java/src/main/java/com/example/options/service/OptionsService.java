@@ -39,13 +39,31 @@ public class OptionsService {
 
         RecommendationResponse response = marketDataClient.fetchLegs(ticker, strategy, expiry, strike);
 
-        if (response == null || response.getLegs() == null || response.getLegs().isEmpty()) {
-            return new RecommendationResponse(Collections.emptyList(), 0, 0);
+        if (response == null) {
+            RecommendationResponse empty = new RecommendationResponse(Collections.emptyList(), 0, 0);
+            empty.setError("Unable to fetch recommendation data.");
+            return empty;
+        }
+
+        if (response.getError() != null && !response.getError().isBlank()) {
+            return response;
+        }
+
+        if (response.getLegs() == null || response.getLegs().isEmpty()) {
+            RecommendationResponse empty = new RecommendationResponse(Collections.emptyList(), 0, 0);
+            empty.setError("No option legs returned for the selected expiry and strike.");
+            return empty;
         }
 
         //Modify lot size for ratio call spread strategy with strategy
         if (strategy.equalsIgnoreCase("ratio call spread")){
-            response.setLegs(getRatioCallSpread(response.getLegs(), risk));
+            List<OptionLeg> adjustedLegs = getRatioCallSpread(response.getLegs(), risk);
+            if (adjustedLegs.isEmpty()) {
+                response.setLegs(Collections.emptyList());
+                response.setError("Could not calculate lot sizes — option premiums may be unavailable.");
+                return response;
+            }
+            response.setLegs(adjustedLegs);
         }
         return response;
     }

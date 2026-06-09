@@ -1,46 +1,42 @@
 import React, { useEffect, useState } from "react";
 
-function Recommendation({ legs, ticker, expiry, strategy, risk, strikeWithHowFar }) {
+function Recommendation({ legs, ticker, expiry, strategy, risk, strikeWithHowFar, onLoaded }) {
   const [loading, setLoading] = useState(false);
   const [processedLegs, setProcessedLegs] = useState([]);
   const [netLabel, setNetLabel] = useState("");
   const [netValue, setNetValue] = useState(0);
 
   useEffect(() => {
-    if (!legs || legs.length === 0) return;
+    if (!legs || legs.length === 0) {
+      onLoaded?.();
+      return;
+    }
 
     setLoading(true);
-    const startTime = Date.now();
 
-    const process = () => {
-      let totalDebit = 0;
-      let totalCredit = 0;
+    let totalDebit = 0;
+    let totalCredit = 0;
 
-      const newProcessedLegs = legs.map((leg) => {
-        const value = leg.premium * leg.lots;
-        if (leg.buySell.toLowerCase() === "buy") {
-          totalDebit += value;
-          return { ...leg, valueType: "Debit", value: value.toFixed(2) };
-        } else {
-          totalCredit += value;
-          return { ...leg, valueType: "Credit", value: value.toFixed(2) };
-        }
-      });
+    const newProcessedLegs = legs.map((leg) => {
+      const value = leg.premium * leg.lots;
+      if (leg.buySell.toLowerCase() === "buy") {
+        totalDebit += value;
+        return { ...leg, valueType: "Debit", value: value.toFixed(2) };
+      } else {
+        totalCredit += value;
+        return { ...leg, valueType: "Credit", value: value.toFixed(2) };
+      }
+    });
 
-      const net = totalCredit - totalDebit;
-      const label = net >= 0 ? "Net Credit" : "Net Debit";
+    const net = totalCredit - totalDebit;
+    const label = net >= 0 ? "Net Credit" : "Net Debit";
 
-      setProcessedLegs(newProcessedLegs);
-      setNetLabel(label);
-      setNetValue(Math.abs(net).toFixed(2));
-
-      const elapsed = Date.now() - startTime;
-      const remaining = 1000 - elapsed;
-      setTimeout(() => setLoading(false), remaining > 0 ? remaining : 0);
-    };
-
-    process();
-  }, [legs, ticker, expiry, strategy, risk, strikeWithHowFar]);
+    setProcessedLegs(newProcessedLegs);
+    setNetLabel(label);
+    setNetValue(Math.abs(net).toFixed(2));
+    setLoading(false);
+    onLoaded?.();
+  }, [legs, ticker, expiry, strategy, risk, strikeWithHowFar, onLoaded]);
 
   if (loading) {
     return (

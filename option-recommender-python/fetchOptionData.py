@@ -5,6 +5,8 @@ import yfinance as yf
 from datetime import datetime, timedelta
 import pandas as pd
 
+from yahoo_errors import error_payload
+
 app = FastAPI()
 
 app.add_middleware(
@@ -54,7 +56,7 @@ def get_options(ticker: str):
         return all_options.to_dict(orient='records')
     
     except Exception as e:
-        return {"error": str(e)}
+        return error_payload(e)
     
 
 @app.get("/expiry_and_strikes/{ticker}/{strategy}")
@@ -122,28 +124,31 @@ def get_expiries_and_strikes(ticker: str, strategy: str):
         }
     
     except Exception as e:
-        return {"error": str(e)}
+        return error_payload(e)
 
 @app.get("/candles/{ticker}")
 def getCandles(ticker: str):
-    data = yf.download(ticker.upper(), period="1y", interval="1d")
+    try:
+        data = yf.download(ticker.upper(), period="1y", interval="1d")
 
-    data.columns = [col[0] for col in data.columns]
-    data = data.sort_values(by='Date')
+        data.columns = [col[0] for col in data.columns]
+        data = data.sort_values(by='Date')
 
-    candles = []
+        candles = []
 
-    for idx, row in data.iterrows():
-        time_unix = int(idx.timestamp())
-        candles.append({
-            "time": int(time_unix),
-            "open": round(row["Open"], 2),
-            "high": round(row["High"], 2),
-            "low": round(row["Low"], 2),
-            "close": round(row["Close"], 2),
-        })
+        for idx, row in data.iterrows():
+            time_unix = int(idx.timestamp())
+            candles.append({
+                "time": int(time_unix),
+                "open": round(row["Open"], 2),
+                "high": round(row["High"], 2),
+                "low": round(row["Low"], 2),
+                "close": round(row["Close"], 2),
+            })
 
-    return candles
+        return candles
+    except Exception as e:
+        return error_payload(e)
 
 
 """
@@ -202,7 +207,7 @@ def fetchLegs(ticker: str, expiry: str, strike: float):
             "highestStrike": sell_leg["strike"],
         }
     except Exception as e:
-        return {"error": str(e)}
+        return error_payload(e)
 
 @app.get("/ping")
 def ping():

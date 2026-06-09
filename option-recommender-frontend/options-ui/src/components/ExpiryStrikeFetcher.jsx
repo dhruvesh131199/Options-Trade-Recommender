@@ -1,12 +1,13 @@
 import React, { useState, useRef } from "react";
 import axios from "axios";
+import { normalizeApiError } from "../utils/apiErrors";
 
 const javaUrl = import.meta.env.VITE_BACKEND_URL;
 
 const tickers = ["AAPL", "MSFT", "GOOG", "NVDA", "TSLA", "AMZN"];
 const strategies = ["Ratio Call Spread"];
 
-function ExpiryStrikeFetcher({ onDataFetched, onResetRecommendation, onFetchStart, onFetchEnd }) {
+function ExpiryStrikeFetcher({ onDataFetched, onResetRecommendation, onFetchStart, onFetchComplete, actionsDisabled }) {
   const lastFetched = useRef({ ticker: null, strategy: null });
   const [ticker, setTicker] = useState(tickers[0]);
   const [strategy, setStrategy] = useState(strategies[0]);
@@ -29,6 +30,18 @@ function ExpiryStrikeFetcher({ onDataFetched, onResetRecommendation, onFetchStar
         strategy,
       }, { timeout: 90000 });
 
+      if (response.data.error) {
+        setError(normalizeApiError(response.data));
+        onFetchComplete?.(false);
+        return;
+      }
+
+      if (!response.data.expiries?.length || !response.data.strikes?.length) {
+        setError(normalizeApiError(response.data, "Could not load expiries and strikes."));
+        onFetchComplete?.(false);
+        return;
+      }
+
       onDataFetched({
         ticker,
         strategy,
@@ -38,12 +51,13 @@ function ExpiryStrikeFetcher({ onDataFetched, onResetRecommendation, onFetchStar
       });
       lastFetched.current = { ticker, strategy };
       setError(null);
+      onFetchComplete?.(true);
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch data. The server may still be waking up — try again in a moment.");
+      setError(normalizeApiError(err.response?.data, "Failed to fetch data. The server may still be waking up — try again in a moment."));
+      onFetchComplete?.(false);
     } finally {
       setLoading(false);
-      onFetchEnd?.();
     }
   };
 
@@ -53,7 +67,7 @@ function ExpiryStrikeFetcher({ onDataFetched, onResetRecommendation, onFetchStar
 
       <div className="mb-3">
         <label className="form-label">Select Ticker</label>
-        <select className="form-select" value={ticker} onChange={(e) => setTicker(e.target.value)}>
+        <select className="form-select" value={ticker} onChange={(e) => setTicker(e.target.value)} disabled={loading || actionsDisabled}>
           {tickers.map((t) => (
             <option key={t} value={t}>{t}</option>
           ))}
@@ -62,14 +76,14 @@ function ExpiryStrikeFetcher({ onDataFetched, onResetRecommendation, onFetchStar
 
       <div className="mb-3">
         <label className="form-label">Select Strategy</label>
-        <select className="form-select" value={strategy} onChange={(e) => setStrategy(e.target.value)}>
+        <select className="form-select" value={strategy} onChange={(e) => setStrategy(e.target.value)} disabled={loading || actionsDisabled}>
           {strategies.map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
       </div>
 
-      <button className="btn btn-primary" onClick={fetchExpiryStrike} disabled={loading}>
+      <button className="btn btn-primary" onClick={fetchExpiryStrike} disabled={loading || actionsDisabled}>
         {loading ? (
           <>
             <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />

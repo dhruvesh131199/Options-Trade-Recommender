@@ -1,9 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
+import { normalizeApiError } from "../utils/apiErrors";
 
 const javaUrl = import.meta.env.VITE_BACKEND_URL;
 const risks = ["Low", "Medium", "High"];
 
-function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol, onRecommendFetched }) {
+function RecommendationFetcher({
+  ticker,
+  strategy,
+  expiries,
+  strikes,
+  weeklyVol,
+  onRecommendFetched,
+  onSubmitStart,
+  onSubmitComplete,
+  actionsDisabled,
+}) {
   const [selectedExpiry, setSelectedExpiry] = useState("");
   const [selectedStrike, setSelectedStrike] = useState("");
   const [risk, setRisk] = useState(risks[0]);
@@ -37,6 +48,7 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
   const handleSubmit = async () => {
     setSubmitting(true);
     setMessage("");
+    onSubmitStart?.();
 
     try {
       const response = await fetch(`${javaUrl}/recommend`, {
@@ -59,7 +71,17 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
 
       const data = await response.json();
 
-      setMessage("");
+      if (data.error) {
+        setMessage(normalizeApiError(data));
+        onSubmitComplete?.(false);
+        return;
+      }
+
+      if (!data.legs || data.legs.length === 0) {
+        setMessage(normalizeApiError(data, "No option legs returned for the selected expiry and strike."));
+        onSubmitComplete?.(false);
+        return;
+      }
 
       onRecommendFetched({
           ticker,
@@ -72,15 +94,19 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
           strikeWithHowFar: selectedStrike
       });
 
+      onSubmitComplete?.(true);
       console.log("Server Response:", data);
 
     } catch (error) {
       console.error("Fetch error:", error);
-      setMessage("Failed to get recommendation, please try again later");
+      setMessage(normalizeApiError(null, "Failed to get recommendation, please try again later"));
+      onSubmitComplete?.(false);
     } finally {
       setSubmitting(false);
     }
   };
+
+  const formDisabled = submitting || actionsDisabled;
 
   return (
     <div>
@@ -95,6 +121,7 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
               className="form-select"
               value={selectedExpiry}
               onChange={(e) => setSelectedExpiry(e.target.value)}
+              disabled={formDisabled}
             >
               {expiries.map((exp, i) => (
                 <option key={i} value={exp}>{exp}</option>
@@ -109,6 +136,7 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
               className="form-select"
               value={selectedStrike}
               onChange={(e) => setSelectedStrike(e.target.value)}
+              disabled={formDisabled}
             >
               {strikes.map((strike, i) => (
                 <option key={i} value={strike}>{strike}</option>
@@ -130,14 +158,14 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
 
           <div className="mb-3">
             <label className="form-label">Select Risk</label>
-            <select className="form-select" value={risk} onChange={(e) => setRisk(e.target.value)}>
+            <select className="form-select" value={risk} onChange={(e) => setRisk(e.target.value)} disabled={formDisabled}>
               {risks.map((i) => (
                 <option key={i} value={i}>{i}</option>
               ))}
             </select>
           </div>
 
-          <button className="btn btn-success" onClick={handleSubmit} disabled={submitting}>
+          <button className="btn btn-success" onClick={handleSubmit} disabled={formDisabled}>
             {submitting ? (
               <>
                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
@@ -155,8 +183,8 @@ function RecommendationFetcher({ ticker, strategy, expiries, strikes, weeklyVol,
       )}
 
       {message && (
-        <div className="text-wrap overflow-auto alert alert-info mt-3">
-          <pre>{message}</pre>
+        <div className="text-wrap overflow-auto alert alert-danger mt-3">
+          {message}
         </div>
       )}
     </div>

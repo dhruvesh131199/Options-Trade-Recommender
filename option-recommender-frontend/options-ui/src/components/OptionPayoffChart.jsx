@@ -27,8 +27,9 @@ const getPayoffData = (legs, lowestStrike, highestPrice, step = 0.5) => {
       else if (type === "put") intrinsicValue = Math.max(strike - S, 0);
 
       let payoff = 0;
-      if (action === "buy") payoff = (intrinsicValue - premium) * lots;
-      else if (action === "sell") payoff = (-intrinsicValue + premium) * lots;
+      const side = (action || "").toLowerCase();
+      if (side === "buy") payoff = (intrinsicValue - premium) * lots;
+      else if (side === "sell") payoff = (-intrinsicValue + premium) * lots;
 
       totalPayoff += payoff;
     });
@@ -39,25 +40,22 @@ const getPayoffData = (legs, lowestStrike, highestPrice, step = 0.5) => {
   return payoffData;
 };
 
-const OptionPayoffChart = ({ legs, ticker, expiry, strategy, risk, strikeWithHowFar, lowestStrike, highestStrike }) => {
+const OptionPayoffChart = ({ legs, ticker, expiry, strategy, risk, strikeWithHowFar, lowestStrike, highestStrike, onLoaded }) => {
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
     if (!legs || legs.length === 0) {
       setLoading(false);
+      onLoaded?.();
       return;
     }
 
-    const startTime = Date.now();
-    console.log(legs);
     const data = getPayoffData(legs, lowestStrike - 10, highestStrike + 10);
     setChartData(data);
-
-    const elapsed = Date.now() - startTime;
-    const remaining = 1000 - elapsed;
-    setTimeout(() => setLoading(false), remaining > 0 ? remaining : 0);
-  }, [legs, ticker, expiry, strategy, risk, strikeWithHowFar]);
+    setLoading(false);
+    onLoaded?.();
+  }, [legs, ticker, expiry, strategy, risk, strikeWithHowFar, lowestStrike, highestStrike, onLoaded]);
 
   if (loading) {
     return (
